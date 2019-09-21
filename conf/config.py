@@ -4,15 +4,16 @@ import os
 
 HOST = '0.0.0.0' if os.environ.get('ENV') == 'online' else 'localhost'
 PORT = os.environ.get('PORT') or 8080
-MYSQL_HOST = os.environ.get('MYSQL_HOST', '')
+MYSQL_HOST = os.environ.get('MYSQL_HOST', '10.108.50.171')
+MYSQL_PORT = os.environ.get('MYSQL_PORT', 12580)
 
 
 MYSQL_CONFIG = {
     'user': 'dev_user',
     'password': '5ecr3t',
-    'host': '10.108.50.171',
+    'host': MYSQL_HOST,
     'db': 'cu',
-    'port': 12580
+    'port': MYSQL_PORT
 }
 
 CORS_RESOURCES = {
