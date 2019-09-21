@@ -6,11 +6,84 @@ from utils.tools import all_none
 
 
 @json_resp
+def menu_department():
+    """
+    :rtype: dict
+    :return:
+    """
+    sql = 'SELECT city_name, department_name FROM sum_tianjin_for_interface GROUP BY city_name, department_name;'
+    res = query_list(sql)
+    return dict(success=True, data=map(lambda x: x['department_name'], res))
+
+
+@json_resp
+def menu_station(city_name, department_name):
+    """
+    :type city_name: str
+    :type department_name: str
+    :rtype: dict
+    :param city_name:
+    :param department_name:
+    :return:
+    """
+    if not city_name and not department_name:
+        return dict(success=False, msg='')
+    sql = 'select department_name, station from sum_tianjin_for_interface ' \
+          'where city_name = "{}" and department_name = "{}" ' \
+          'GROUP BY city_name, department_name, station;'.format(city_name, department_name)
+    res = query_list(sql)
+    return dict(success=True, data=map(lambda x: x['station'], res))
+
+
+@json_resp
+def menus_olt(city_name, department_name, station):
+    sql = 'select station, OLT_port as olt_name from sum_tianjin_for_interface ' \
+          'where city_name = "{}" and department_name = "{}" and station = "{}" ' \
+          'GROUP BY city_name, department_name, station, olt_name;'.format(city_name, department_name, station)
+    res = query_list(sql)
+    return dict(success=True, data=map(lambda x: x['olt_name'], res))
+
+
+@json_resp
 def menus():
-    sql = 'SELECT city_name, department_name, station, OLT_port as olt_name FROM sum_tianjin_for_interface ' \
+    sql = 'SELECT city_name, department_name, station, OLT_port AS olt_name FROM sum_tianjin_for_interface ' \
           'GROUP BY city_name, department_name, station, OLT_port;'
     _res = query_list(sql)
-    res = {}
+    e = {
+        'id': u'天津',
+        'parentId': 0,
+        'level': 1,
+        'hide': False
+    }
+    res = [e]
+    d = None
+    for i in _res:
+        if d != i['department_name']:
+            d = i['department_name']
+            _e = {
+                'id': i['department_name'],
+                'parentId': i['city_name'],
+                'level': 2,
+                'hide': False
+            }
+            res.append(_e)
+        _e = {
+            'id': i['station'],
+            'parentId': i['department_name'],
+            'city_name': i['city_name'],
+            'level': 3,
+            'hide': True
+        }
+        res.append(_e)
+        _e = {
+            'id': i['olt_name'],
+            'parentId': i['station'],
+            'city_name': i['city_name'],
+            'department_name': i['department_name'],
+            'level': 4
+        }
+        res.append(_e)
+
     return dict(success=True, data=res)
 
 
@@ -34,7 +107,6 @@ def olt_count(label):
               'FROM sum_tianjin_for_interface where city_name = "{}" AND department_name = "{}" ' \
               'GROUP BY city_name, department_name;'.format(city.encode('utf-8'),
                                                             department.encode('utf-8'))
-        # console.info('sql: {}'.format(sql))
         res = query_one(sql)
     elif city:
         sql = 'SELECT city_name, count(DISTINCT OLT_port) AS olt_count ' \
@@ -184,10 +256,10 @@ def olt_vendor_branch_distribution(label):
               '       pon_users.station, ' \
               '       pon.device_model         AS model, ' \
               '       count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM pon_traffic_statistics_csv AS pon ' \
-              '       INNER JOIN relay_circuit_mapping AS mapping ON pon.ip = mapping.ip ' \
-              '       INNER JOIN sum_tianjin_for_interface AS pon_users ' \
-              'ON mapping.z_end_name = pon_users.OLT_port ' \
+              'FROM sum_tianjin_for_interface AS pon_users ' \
+              '       INNER JOIN relay_circuit_mapping AS mapping ' \
+              '        ON mapping.z_end_name = pon_users.OLT_port ' \
+              '       INNER JOIN cu.pon_traffic_statistics_csv AS pon ON pon.ip = mapping.ip ' \
               'WHERE pon_users.city_name = "{}" and pon_users.department_name = "{}" and pon_users.station = "{}" ' \
               'GROUP BY pon.manufacturer, city_name, department_name, station, model;'.format(city.encode('utf-8'),
                                                                                               department.encode(
@@ -200,10 +272,10 @@ def olt_vendor_branch_distribution(label):
               '       pon_users.department_name, ' \
               '       pon.device_model         AS model, ' \
               '       count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM pon_traffic_statistics_csv AS pon ' \
-              '       INNER JOIN relay_circuit_mapping AS mapping ON pon.ip = mapping.ip ' \
-              '       INNER JOIN sum_tianjin_for_interface AS pon_users ' \
-              'ON mapping.z_end_name = pon_users.OLT_port ' \
+              'FROM sum_tianjin_for_interface AS pon_users ' \
+              '       INNER JOIN relay_circuit_mapping AS mapping ' \
+              '        ON mapping.z_end_name = pon_users.OLT_port ' \
+              '       INNER JOIN cu.pon_traffic_statistics_csv AS pon ON pon.ip = mapping.ip ' \
               'WHERE pon_users.city_name = "{}" and pon_users.department_name = "{}" ' \
               'GROUP BY pon.manufacturer, city_name, department_name, model;'.format(city.encode('utf-8'),
                                                                                      department.encode('utf-8'))
@@ -213,9 +285,10 @@ def olt_vendor_branch_distribution(label):
               '       pon_users.city_name      AS city_name, ' \
               '       pon.device_model         AS model, ' \
               '       count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM pon_traffic_statistics_csv AS pon ' \
-              '       INNER JOIN relay_circuit_mapping AS mapping ON pon.ip = mapping.ip ' \
-              '       INNER JOIN sum_tianjin_for_interface AS pon_users ON mapping.z_end_name = pon_users.OLT_port ' \
+              'FROM sum_tianjin_for_interface AS pon_users ' \
+              '       INNER JOIN relay_circuit_mapping AS mapping ' \
+              '        ON mapping.z_end_name = pon_users.OLT_port ' \
+              '       INNER JOIN cu.pon_traffic_statistics_csv AS pon ON pon.ip = mapping.ip ' \
               'WHERE pon_users.city_name = "{}" ' \
               'GROUP BY pon.manufacturer, city_name, model;'.format(city.encode('utf-8'))
         res = query_list(sql)
@@ -271,7 +344,7 @@ def pon_port_count(label):
         sql = 'SELECT csv.city_name, sub_company AS department_name, station, count(port) AS pon_port_count ' \
               'FROM pon_traffic_statistics_csv AS csv ' \
               'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip ' \
-              'where csv.city_name = "{}" and sub_company = "{}" and station = "{}" and mapping.z_end_name = "{}" ' \
+              'where csv.city_name = "{}" and department_name = "{}" and station = "{}" and mapping.z_end_name = "{}" ' \
               'GROUP BY csv.city_name, department_name, station;'.format(city.encode('utf-8'),
                                                                          department.encode('utf-8'),
                                                                          station,
@@ -487,7 +560,7 @@ def service_board_usage_rate(label):
               "IF(csv.device_model = 'C220v1.2', 'ZXA10 C220', " \
               "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300', " \
               "csv.device_model))            AS device_model, " \
-              "COUNT(DISTINCT itf.pon_bord_number) AS used_pon_board_count " \
+              "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count " \
               "FROM sum_tianjin_for_interface AS itf " \
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port " \
               "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip " \
@@ -507,7 +580,7 @@ def service_board_usage_rate(label):
               "IF(csv.device_model = 'C220v1.2', 'ZXA10 C220', " \
               "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300'," \
               "csv.device_model))            AS device_model," \
-              "COUNT(DISTINCT itf.pon_bord_number) AS used_pon_board_count " \
+              "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count " \
               "FROM sum_tianjin_for_interface AS itf " \
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port " \
               "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip " \
@@ -527,7 +600,7 @@ def service_board_usage_rate(label):
               "IF(csv.device_model = 'C220v1.2', 'ZXA10 C220', " \
               "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300'," \
               "csv.device_model))            AS device_model," \
-              "COUNT(DISTINCT itf.pon_bord_number) AS used_pon_board_count " \
+              "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count " \
               "FROM sum_tianjin_for_interface AS itf " \
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port " \
               "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip " \
@@ -546,7 +619,7 @@ def service_board_usage_rate(label):
               "IF(csv.device_model = 'C220v1.2', 'ZXA10 C220', " \
               "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300'," \
               "csv.device_model))            AS device_model," \
-              "COUNT(DISTINCT itf.pon_bord_number) AS used_pon_board_count " \
+              "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count " \
               "FROM sum_tianjin_for_interface AS itf " \
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port " \
               "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip " \
@@ -566,7 +639,7 @@ def service_board_usage_rate(label):
     #             "IF(csv.device_model = 'C220v1.2', 'ZXA10 C220', "
     #             "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300',"
     #             "csv.device_model))            AS device_model,"
-    #             "COUNT(DISTINCT itf.pon_bord_number) AS used_pon_board_count "
+    #             "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count "
     #             "FROM sum_tianjin_for_interface AS itf "
     #             "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port "
     #             "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip "
@@ -581,7 +654,7 @@ def service_board_usage_rate(label):
     #                   "IF(csv.device_model = 'C220v1.2', 'ZXA10 C220', "
     #                   "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300',"
     #                   "csv.device_model))            AS device_model,"
-    #                   "COUNT(DISTINCT itf.pon_bord_number) AS used_pon_board_count "
+    #                   "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count "
     #                   "FROM sum_tianjin_for_interface AS itf "
     #                   "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port "
     #                   "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip "
@@ -596,7 +669,7 @@ def service_board_usage_rate(label):
     #                "IF(csv.device_model = 'C220v1.2', 'ZXA10 C220', "
     #                "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300',"
     #                "csv.device_model))            AS device_model,"
-    #                "COUNT(DISTINCT itf.pon_bord_number) AS used_pon_board_count "
+    #                "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count "
     #                "FROM sum_tianjin_for_interface AS itf "
     #                "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port "
     #                "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip "
@@ -741,12 +814,12 @@ def service_board_slot_stat(station, department, city):
               "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300'," \
               "csv.device_model))            AS device_model," \
               "itf.OLT_port as olt, " \
-              "COUNT(DISTINCT itf.pon_bord_number) AS used_pon_board_count " \
+              "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count " \
               "FROM sum_tianjin_for_interface AS itf " \
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port " \
               "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip " \
-              "where csv.city_name = '{}' and csv.department_name = '{}' and itf.station = '{}' " \
-              "GROUP BY city_name, itf.department_name, itf.station, itf.OLT_port, csv.device_model) AS x " \
+              "where itf.city_name = '{}' and itf.department_name = '{}' and itf.station = '{}' " \
+              "GROUP BY itf.city_name, itf.department_name, itf.station, itf.OLT_port, csv.device_model) AS x " \
               "INNER JOIN olt_device AS device ON x.device_model = device.olt_model " \
               "GROUP BY city_name, x.department_name, x.station, x.olt;".format(city.encode('utf-8'),
                                                                                 department.encode('utf-8'),
@@ -762,12 +835,12 @@ def service_board_slot_stat(station, department, city):
               "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300'," \
               "csv.device_model))            AS device_model, " \
               "itf.OLT_port as olt, " \
-              "COUNT(DISTINCT itf.pon_bord_number) AS used_pon_board_count " \
+              "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count " \
               "FROM sum_tianjin_for_interface AS itf " \
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port " \
               "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip " \
-              "where csv.city_name = '{}' and itf.department_name = '{}' " \
-              "GROUP BY city_name, itf.department_name, itf.OLT_port, csv.device_model) AS x " \
+              "where itf.city_name = '{}' and itf.department_name = '{}' " \
+              "GROUP BY itf.city_name, itf.department_name, itf.OLT_port, csv.device_model) AS x " \
               "INNER JOIN olt_device AS device ON x.device_model = device.olt_model " \
               "GROUP BY city_name, x.department_name, x.olt;".format(city.encode('utf-8'),
                                                                      department.encode('utf-8'))
@@ -782,11 +855,11 @@ def service_board_slot_stat(station, department, city):
               "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300'," \
               "csv.device_model))            AS device_model, " \
               "itf.OLT_port AS olt, " \
-              "COUNT(DISTINCT itf.pon_bord_number) AS used_pon_board_count " \
+              "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count " \
               "FROM sum_tianjin_for_interface AS itf " \
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port " \
               "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip " \
-              "GROUP BY city_name, itf.OLT_port, csv.device_model) AS x " \
+              "GROUP BY itf.city_name, itf.OLT_port, csv.device_model) AS x " \
               "INNER JOIN olt_device AS device ON x.device_model = device.olt_model " \
               "GROUP BY city_name, x.olt;"
         res = query_list(sql)
@@ -969,7 +1042,7 @@ def pon_port_users_count(olt, station, department, city):
     # TODO
     if all_none([olt, station, department, city]):
         return dict(success=False, msg='query parameters invalid.')
-    
+
     if olt and station and department and city:
         sql = "SELECT " \
               "package_speed, " \
@@ -985,6 +1058,7 @@ def pon_port_users_count(olt, station, department, city):
 
 @json_resp
 def olt_uplink_port_count(olt, station, department, city):
+    # TODO NO INDEX
     if all_none([olt, station, department, city]):
         return dict(success=False, msg='query parameters invalid.')
 
@@ -1045,6 +1119,7 @@ def olt_uplink_port_count(olt, station, department, city):
 
 @json_resp
 def olt_10ge_uplink_count(station, department, city):
+    # TODO NO INDEX
     if all_none([station, department, city]):
         return dict(success=False, msg='query parameters invalid.')
 
@@ -1087,35 +1162,52 @@ def olt_uplink_stat(station, department, city):
         return dict(success=False, msg='query parameters invalid.')
 
     if station and department and city:
-        sql = "SELECT itf.OLT_port as olt_name, " \
-              "sum(input_average_traffic_in_Mbps) as total_input_traffic " \
-              "from uplink_traffic_statistics_csv as csv " \
-              "INNER  JOIN relay_circuit_mapping as mapping on mapping.ip = csv.ip " \
-              "INNER JOIN sum_tianjin_for_interface as itf on itf.OLT_port = mapping.z_end_name " \
-              "where itf.city_name = '{}' and itf.department_name = '{}' and itf.station = '{}' " \
-              "GROUP BY itf.city_name, itf.department_name, itf.station, itf.OLT_port;".format(city.encode('utf-8'),
-                                                                                               department.encode(
-                                                                                                   'utf-8'),
-                                                                                               station)
+        sql = "SELECT " \
+              "z_end_name                         AS olt_name, " \
+              "sum(input_average_traffic_in_Mbps) AS t " \
+              "FROM relay_circuit_mapping AS mapping " \
+              "INNER JOIN uplink_traffic_statistics_csv AS csv ON mapping.ip = csv.ip, " \
+              "(SELECT " \
+              "   min(OLT_port) AS mi, " \
+              "   max(OLT_port) AS ma " \
+              " FROM sum_tianjin_for_interface " \
+              " WHERE city_name = '{}' AND department_name = '{}' AND station = '{}'" \
+              " GROUP BY OLT_port) AS x " \
+              "WHERE mapping.z_end_name BETWEEN x.mi AND x.ma " \
+              "GROUP BY z_end_name;".format(city.encode('utf-8'),
+                                            department.encode('utf-8'),
+                                            station)
         res = query_list(sql)
     elif department and city:
-        sql = "SELECT itf.OLT_port as olt_name, " \
-              "sum(input_average_traffic_in_Mbps) as total_input_traffic " \
-              "from uplink_traffic_statistics_csv as csv " \
-              "INNER  JOIN relay_circuit_mapping as mapping on mapping.ip = csv.ip " \
-              "INNER JOIN sum_tianjin_for_interface as itf on itf.OLT_port = mapping.z_end_name " \
-              "where itf.city_name = '{}' and itf.department_name = '{}' " \
-              "GROUP BY itf.city_name, itf.department_name, itf.OLT_port;".format(city.encode('utf-8'),
-                                                                                  department.encode('utf-8'))
+        sql = "SELECT " \
+              "z_end_name                         AS olt_name, " \
+              "sum(input_average_traffic_in_Mbps) AS t " \
+              "FROM relay_circuit_mapping AS mapping " \
+              "INNER JOIN uplink_traffic_statistics_csv AS csv ON mapping.ip = csv.ip, " \
+              "(SELECT " \
+              "   min(OLT_port) AS mi, " \
+              "   max(OLT_port) AS ma " \
+              " FROM sum_tianjin_for_interface " \
+              " WHERE city_name = '{}' AND department_name = '{}' " \
+              " GROUP BY OLT_port) AS x " \
+              "WHERE mapping.z_end_name BETWEEN x.mi AND x.ma " \
+              "GROUP BY z_end_name;".format(city.encode('utf-8'),
+                                            department.encode('utf-8'))
         res = query_list(sql)
     elif city:
-        sql = "SELECT itf.OLT_port as olt_name, " \
-              "sum(input_average_traffic_in_Mbps) as total_input_traffic " \
-              "from uplink_traffic_statistics_csv as csv " \
-              "INNER  JOIN relay_circuit_mapping as mapping on mapping.ip = csv.ip " \
-              "INNER JOIN sum_tianjin_for_interface as itf on itf.OLT_port = mapping.z_end_name " \
-              "where itf.city_name = '{}' " \
-              "GROUP BY itf.city_name, itf.OLT_port;".format(city.encode('utf-8'))
+        sql = "SELECT " \
+              "z_end_name                         AS olt_name, " \
+              "sum(input_average_traffic_in_Mbps) AS t " \
+              "FROM relay_circuit_mapping AS mapping " \
+              "INNER JOIN uplink_traffic_statistics_csv AS csv ON mapping.ip = csv.ip, " \
+              "(SELECT " \
+              "   min(OLT_port) AS mi, " \
+              "   max(OLT_port) AS ma " \
+              " FROM sum_tianjin_for_interface " \
+              " WHERE city_name = '{}' " \
+              " GROUP BY OLT_port) AS x " \
+              "WHERE mapping.z_end_name BETWEEN x.mi AND x.ma " \
+              "GROUP BY z_end_name;".format(city.encode('utf-8'))
         res = query_list(sql)
     else:
         res = []
@@ -1147,4 +1239,3 @@ def olt_info(olt_name):
     # TODO
     if not olt_name:
         return dict(success=False, msg='query parameters invalid.')
-

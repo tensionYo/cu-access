@@ -6,9 +6,24 @@ from flask import request
 bp = Blueprint('olt-bp', __name__, url_prefix='/api')
 
 
-@bp.route('/menus')
+@bp.route('/menus/')
 def get_menus():
     return menus()
+
+
+@bp.route('/menus/department/')
+def get_departments():
+    return menu_department()
+
+
+@bp.route('/menus/<city_name>/<department_name>/')
+def get_stations(city_name, department_name):
+    return menu_station(city_name.encode('utf-8'), department_name.encode('utf-8'))
+
+
+@bp.route('/menus/<city_name>/<department_name>/<station>/')
+def get_olts(city_name, department_name, station):
+    return menus_olt(city_name.encode('utf-8'), department_name.encode('utf-8'), station)
 
 
 @bp.route('/olt-count/')
@@ -92,6 +107,7 @@ def pon_port_users_stat_api():
 
 @bp.route('/pon-port-users-count/')
 def pon_port_users_count_api():
+    # DEPRECATED
     station = request.args.get('station', None)
     department = request.args.get('department', None)
     city = request.args.get('city', None)
