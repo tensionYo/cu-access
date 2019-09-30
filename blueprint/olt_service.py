@@ -115,18 +115,6 @@ def olt_count(label):
         res = cli.fetchone(sql)
     else:
         return dict(success=False, msg='query parameter invalid.')
-    # if label == 'city':
-    #     sql = 'SELECT city_name, count(DISTINCT OLT_port) AS olt_count ' \
-    #           'FROM sum_tianjin_for_interface GROUP BY city_name;'
-    # elif label == 'department':
-    #     sql = 'SELECT city_name, department_name, count(DISTINCT OLT_port) AS olt_count ' \
-    #           'FROM sum_tianjin_for_interface GROUP BY city_name, department_name;'
-    # elif label == 'station':
-    #     sql = 'SELECT city_name, department_name, station, count(DISTINCT OLT_port) AS olt_count ' \
-    #           'FROM sum_tianjin_for_interface GROUP BY city_name, department_name, station;'
-    # else:
-    #     return []
-    # res = cli.fetchall(sql)
     return dict(success=True, data=res)
 
 
@@ -161,23 +149,6 @@ def olt_manufacturer_count(label):
         res = cli.fetchall(sql)
     else:
         res = {}
-    # sql = {
-    #     'city': 'SELECT city_name, substring_index(substring_index(OLT_port, \'_\', 2), \'_\', -1) AS brand, '
-    #             'count(DISTINCT OLT_port) AS olt_count FROM sum_tianjin_for_interface GROUP BY city_name, brand;',
-    #     'department': 'SELECT city_name, department_name, '
-    #                   'substring_index(substring_index(OLT_port, \'_\', 2), \'_\', -1) AS brand, '
-    #                   'count(DISTINCT OLT_port) AS olt_count '
-    #                   'FROM sum_tianjin_for_interface GROUP BY city_name, department_name, brand;',
-    #     'station': 'SELECT city_name, department_name, station, substring_index(substring_index(OLT_port, '
-    #                '\'_\', 2), \'_\', -1) AS brand, count(DISTINCT OLT_port) AS olt_count '
-    #                'FROM sum_tianjin_for_interface GROUP BY city_name, department_name, station, brand;'
-    # }
-    # VENDOR_MAP = {
-    #     'HW': u'华为',
-    #     'ZX': u'中兴',
-    #     'FH': u'烽火'
-    # }
-    # res = cli.fetchall(sql[label]) if label in sql else []
     return dict(success=True, data=res)
 
 
@@ -229,15 +200,6 @@ def olt_user_count(label):
                 resp['60-80'] += 1
             else:
                 resp['80+'] += 1
-    # sql = {
-    #     'city': 'SELECT city_name, count(*) AS user_count '
-    #             'FROM sum_tianjin_for_interface GROUP BY city_name;',
-    #     'department': 'SELECT city_name, department_name, count(*) AS user_count '
-    #                   'FROM sum_tianjin_for_interface GROUP BY city_name, department_name;',
-    #     'station': 'SELECT city_name, department_name, station, count(*) AS user_count '
-    #                'FROM sum_tianjin_for_interface GROUP BY city_name, department_name, station;'
-    # }
-    # res = cli.fetchall(sql[label]) if label in sql else []
     return dict(success=True, data=resp)
 
 
@@ -295,39 +257,6 @@ def olt_vendor_branch_distribution(label):
     else:
         res = {}
 
-    # sql = {
-    #     'city': 'SELECT pon.manufacturer         AS brand, '
-    #             '       pon_users.city_name      AS city_name, '
-    #             '       pon.device_model         AS model, '
-    #             '       count(DISTINCT OLT_port) AS olt_count '
-    #             'FROM pon_traffic_statistics_csv AS pon '
-    #             '       INNER JOIN relay_circuit_mapping AS mapping ON pon.ip = mapping.ip '
-    #             '       INNER JOIN sum_tianjin_for_interface AS pon_users ON mapping.z_end_name = pon_users.OLT_port '
-    #             'GROUP BY pon.manufacturer, city_name, model;',
-    #     'department': 'SELECT pon.manufacturer         AS brand, '
-    #                   '       pon_users.city_name      AS city_name, '
-    #                   '       pon_users.department_name, '
-    #                   '       pon.device_model         AS model, '
-    #                   '       count(DISTINCT OLT_port) AS olt_count '
-    #                   'FROM pon_traffic_statistics_csv AS pon '
-    #                   '       INNER JOIN relay_circuit_mapping AS mapping ON pon.ip = mapping.ip '
-    #                   '       INNER JOIN sum_tianjin_for_interface AS pon_users '
-    #                   'ON mapping.z_end_name = pon_users.OLT_port '
-    #                   'GROUP BY pon.manufacturer, city_name, department_name, model;',
-    #
-    #     'station': 'SELECT pon.manufacturer         AS brand, '
-    #                '       pon_users.city_name      AS city_name, '
-    #                '       pon_users.department_name, '
-    #                '       pon_users.station, '
-    #                '       pon.device_model         AS model, '
-    #                '       count(DISTINCT OLT_port) AS olt_count '
-    #                'FROM pon_traffic_statistics_csv AS pon '
-    #                '       INNER JOIN relay_circuit_mapping AS mapping ON pon.ip = mapping.ip '
-    #                '       INNER JOIN sum_tianjin_for_interface AS pon_users '
-    #                'ON mapping.z_end_name = pon_users.OLT_port '
-    #                'GROUP BY pon.manufacturer, city_name, department_name, station, model;'
-    # }
-    # res = cli.fetchall(sql[label]) if label in sql else []
     return dict(success=True, data=res)
 
 
@@ -376,21 +305,6 @@ def pon_port_count(label):
         res = cli.fetchone(sql)
     else:
         res = {}
-    # sql = {
-    #     'city': 'SELECT city_name, count(port) AS pon_port_count '
-    #             'FROM pon_traffic_statistics_csv AS csv '
-    #             'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip '
-    #             'GROUP BY city_name;',
-    #     'department': 'SELECT city_name, sub_company AS department_name, count(port) AS pon_port_count '
-    #                   'FROM pon_traffic_statistics_csv AS csv '
-    #                   'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip '
-    #                   'GROUP BY city_name, department_name;',
-    #     'station': 'SELECT city_name, sub_company AS department_name, station, count(port) AS pon_port_count '
-    #                'FROM pon_traffic_statistics_csv AS csv '
-    #                'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip '
-    #                'GROUP BY city_name, department_name, station;',
-    # }
-    # res = cli.fetchall(sql[label]) if label in sql else []
     return dict(success=True, data=res)
 
 
@@ -473,61 +387,6 @@ def pon_port_usage_rate(label):
         res = cli.fetchone(sql)
     else:
         res = {}
-    # sql = {
-    #     'city': 'SELECT city_name, sum(if(input_peak_traffic = \'0.00Mb/s\' '
-    #             'AND input_average_traffic = \'0.00Mb/s\' '
-    #             'AND output_peak_traffic = \'0.00Mb/s\' '
-    #             'AND output_average_traffic = \'0.00Mb/s\', 1, 0)) AS idle_port_count, '
-    #             'sum(if(input_peak_traffic <> \'0.00Mb/s\' '
-    #             'OR input_average_traffic <> \'0.00Mb/s\' '
-    #             'OR output_peak_traffic <> \'0.00Mb/s\' '
-    #             'OR output_average_traffic <> \'0.00Mb/s\', 1, 0)) AS used_port_count '
-    #             'FROM pon_traffic_statistics_csv '
-    #             'GROUP BY city_name;',
-    #     'department': 'SELECT city_name, sub_company AS department_name, '
-    #                   'sum(if(input_peak_traffic = \'0.00Mb/s\' '
-    #                   'AND input_average_traffic = \'0.00Mb/s\' '
-    #                   'AND output_peak_traffic = \'0.00Mb/s\' '
-    #                   'AND output_average_traffic = \'0.00Mb/s\', 1, 0)) AS idle_port_count, '
-    #                   'sum(if(input_peak_traffic <> \'0.00Mb/s\' '
-    #                   'OR input_average_traffic <> \'0.00Mb/s\' '
-    #                   'OR output_peak_traffic <> \'0.00Mb/s\' '
-    #                   'OR output_average_traffic <> \'0.00Mb/s\', 1, 0)) AS used_port_count '
-    #                   'FROM pon_traffic_statistics_csv '
-    #                   'GROUP BY city_name, department_name;',
-    #     'station': 'SELECT '
-    #                'csv.city_name, '
-    #                'sub_company                                             AS department_name, '
-    #                'mapping.station, '
-    #                'sum(if(input_peak_traffic = \'0.00Mb/s\' '
-    #                'AND input_average_traffic = \'0.00Mb/s\' '
-    #                'AND output_peak_traffic = \'0.00Mb/s\' '
-    #                'AND output_average_traffic = \'0.00Mb/s\', 1, 0))  AS idle_port_count, '
-    #                'sum(if(input_peak_traffic <> \'0.00Mb/s\' '
-    #                'OR input_average_traffic <> \'0.00Mb/s\' '
-    #                'OR output_peak_traffic <> \'0.00Mb/s\' '
-    #                'OR output_average_traffic <> \'0.00Mb/s\', 1, 0)) AS used_port_count '
-    #                'FROM pon_traffic_statistics_csv AS csv '
-    #                'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip '
-    #                'GROUP BY csv.city_name, sub_company, mapping.station;',
-    #     'olt': 'SELECT '
-    #            'csv.city_name, '
-    #            'sub_company                                             AS department_name, '
-    #            'mapping.station, mapping.z_end_name AS olt_name, '
-    #            'sum(if(input_peak_traffic = \'0.00Mb/s\' '
-    #            'AND input_average_traffic = \'0.00Mb/s\' '
-    #            'AND output_peak_traffic = \'0.00Mb/s\' '
-    #            'AND output_average_traffic = \'0.00Mb/s\', 1, 0))  AS idle_port_count, '
-    #            'sum(if(input_peak_traffic <> \'0.00Mb/s\' '
-    #            'OR input_average_traffic <> \'0.00Mb/s\' '
-    #            'OR output_peak_traffic <> \'0.00Mb/s\' '
-    #            'OR output_average_traffic <> \'0.00Mb/s\', 1, 0)) AS used_port_count '
-    #            'FROM pon_traffic_statistics_csv AS csv '
-    #            'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip '
-    #            'GROUP BY csv.city_name, sub_company, mapping.station, olt_name;'
-    # }
-    # res = cli.fetchall(sql[label]) if label in sql else {}
-    # for i in res:
     if res:
         for k in ['idle_port_count', 'used_port_count']:
             res[k] = int(res[k])
@@ -630,54 +489,6 @@ def service_board_usage_rate(label):
         res = cli.fetchone(sql)
     else:
         res = {}
-    # sql = {
-    #     'city': "SELECT x.city_name, "
-    #             "sum(device.service_slot_count) AS total_service_slot_count, "
-    #             "sum(x.used_pon_board_count)    AS used_service_slot_count "
-    #             "FROM ("
-    #             "SELECT itf.city_name, "
-    #             "IF(csv.device_model = 'C220v1.2', 'ZXA10 C220', "
-    #             "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300',"
-    #             "csv.device_model))            AS device_model,"
-    #             "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count "
-    #             "FROM sum_tianjin_for_interface AS itf "
-    #             "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port "
-    #             "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip "
-    #             "GROUP BY city_name, itf.OLT_port, csv.device_model) AS x "
-    #             "INNER JOIN olt_device AS device ON x.device_model = device.olt_model "
-    #             "GROUP BY city_name;",
-    #     'department': "SELECT x.city_name, x.department_name, "
-    #                   "sum(device.service_slot_count) AS total_service_slot_count, "
-    #                   "sum(x.used_pon_board_count)    AS used_service_slot_count "
-    #                   "FROM ("
-    #                   "SELECT itf.city_name, itf.department_name, "
-    #                   "IF(csv.device_model = 'C220v1.2', 'ZXA10 C220', "
-    #                   "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300',"
-    #                   "csv.device_model))            AS device_model,"
-    #                   "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count "
-    #                   "FROM sum_tianjin_for_interface AS itf "
-    #                   "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port "
-    #                   "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip "
-    #                   "GROUP BY city_name, itf.department_name, itf.OLT_port, csv.device_model) AS x "
-    #                   "INNER JOIN olt_device AS device ON x.device_model = device.olt_model "
-    #                   "GROUP BY city_name, x.department_name;",
-    #     'station': "SELECT x.city_name, x.department_name, x.station, "
-    #                "sum(device.service_slot_count) AS total_service_slot_count, "
-    #                "sum(x.used_pon_board_count)    AS used_service_slot_count "
-    #                "FROM ("
-    #                "SELECT itf.city_name, itf.department_name, itf.station, "
-    #                "IF(csv.device_model = 'C220v1.2', 'ZXA10 C220', "
-    #                "IF(csv.device_model IN ('C300v1.3', 'C300v1.0'), 'ZXA10 C300',"
-    #                "csv.device_model))            AS device_model,"
-    #                "COUNT(DISTINCT itf.pon_board_number) AS used_pon_board_count "
-    #                "FROM sum_tianjin_for_interface AS itf "
-    #                "INNER JOIN relay_circuit_mapping AS mapping ON mapping.z_end_name = itf.OLT_port "
-    #                "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip "
-    #                "GROUP BY city_name, itf.department_name, itf.station, itf.OLT_port, csv.device_model) AS x "
-    #                "INNER JOIN olt_device AS device ON x.device_model = device.olt_model "
-    #                "GROUP BY city_name, x.department_name, x.station;"
-    # }
-    # res = cli.fetchall(sql[label]) if label in sql else {}
     if res:
         for k in ['total_service_slot_count', 'used_service_slot_count']:
             res[k] = int(res[k])
