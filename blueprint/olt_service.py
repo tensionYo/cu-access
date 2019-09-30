@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import request
-from db.client import query_list, query_one
+from db.client import cli
 from utils.decorator import json_resp
 from utils.tools import all_none
 
@@ -12,7 +12,7 @@ def menu_department():
     :return:
     """
     sql = 'SELECT city_name, department_name FROM sum_tianjin_for_interface GROUP BY city_name, department_name;'
-    res = query_list(sql)
+    res = cli.fetchall(sql)
     return dict(success=True, data=map(lambda x: x['department_name'], res))
 
 
@@ -28,27 +28,27 @@ def menu_station(city_name, department_name):
     """
     if not city_name and not department_name:
         return dict(success=False, msg='')
-    sql = 'select department_name, station from sum_tianjin_for_interface ' \
-          'where city_name = "{}" and department_name = "{}" ' \
-          'GROUP BY city_name, department_name, station;'.format(city_name, department_name)
-    res = query_list(sql)
+    sql = "select department_name, station from sum_tianjin_for_interface " \
+          "where city_name = '{}' and department_name = '{}' " \
+          "GROUP BY city_name, department_name, station;".format(city_name, department_name)
+    res = cli.fetchall(sql)
     return dict(success=True, data=map(lambda x: x['station'], res))
 
 
 @json_resp
 def menus_olt(city_name, department_name, station):
-    sql = 'select station, OLT_port as olt_name from sum_tianjin_for_interface ' \
-          'where city_name = "{}" and department_name = "{}" and station = "{}" ' \
-          'GROUP BY city_name, department_name, station, olt_name;'.format(city_name, department_name, station)
-    res = query_list(sql)
+    sql = "select station, OLT_port as olt_name from sum_tianjin_for_interface " \
+          "where city_name = '{}' and department_name = '{}' and station = '{}' " \
+          "GROUP BY city_name, department_name, station, olt_name;".format(city_name, department_name, station)
+    res = cli.fetchall(sql)
     return dict(success=True, data=map(lambda x: x['olt_name'], res))
 
 
 @json_resp
 def menus():
-    sql = 'SELECT city_name, department_name, station, OLT_port AS olt_name FROM sum_tianjin_for_interface ' \
-          'GROUP BY city_name, department_name, station, OLT_port;'
-    _res = query_list(sql)
+    sql = "SELECT city_name, department_name, station, OLT_port AS olt_name FROM sum_tianjin_for_interface " \
+          "GROUP BY city_name, department_name, station, OLT_port;"
+    _res = cli.fetchall(sql)
     e = {
         'id': u'天津',
         'parentId': 0,
@@ -96,23 +96,23 @@ def olt_count(label):
         return dict(success=False, msg='query parameter invalid.')
 
     if station and department and city:
-        sql = 'SELECT city_name, department_name, station, count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM sum_tianjin_for_interface where city_name = "{}" AND department_name = "{}" AND station = "{}" ' \
-              'GROUP BY city_name, department_name, station;'.format(city.encode('utf-8'),
+        sql = "SELECT city_name, department_name, station, count(DISTINCT OLT_port) AS olt_count " \
+              "FROM sum_tianjin_for_interface where city_name = '{}' AND department_name = '{}' AND station = '{}' " \
+              "GROUP BY city_name, department_name, station;".format(city.encode('utf-8'),
                                                                      department.encode('utf-8'),
                                                                      station)
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif department and city:
-        sql = 'SELECT city_name, department_name, count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM sum_tianjin_for_interface where city_name = "{}" AND department_name = "{}" ' \
-              'GROUP BY city_name, department_name;'.format(city.encode('utf-8'),
+        sql = "SELECT city_name, department_name, count(DISTINCT OLT_port) AS olt_count " \
+              "FROM sum_tianjin_for_interface where city_name = '{}' AND department_name = '{}' " \
+              "GROUP BY city_name, department_name;".format(city.encode('utf-8'),
                                                             department.encode('utf-8'))
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif city:
-        sql = 'SELECT city_name, count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM sum_tianjin_for_interface where city_name = "{}" ' \
-              'GROUP BY city_name;'.format(city.encode('utf-8'))
-        res = query_one(sql)
+        sql = "SELECT city_name, count(DISTINCT OLT_port) AS olt_count " \
+              "FROM sum_tianjin_for_interface where city_name = '{}' " \
+              "GROUP BY city_name;".format(city.encode('utf-8'))
+        res = cli.fetchone(sql)
     else:
         return dict(success=False, msg='query parameter invalid.')
     # if label == 'city':
@@ -126,7 +126,7 @@ def olt_count(label):
     #           'FROM sum_tianjin_for_interface GROUP BY city_name, department_name, station;'
     # else:
     #     return []
-    # res = query_list(sql)
+    # res = cli.fetchall(sql)
     return dict(success=True, data=res)
 
 
@@ -139,26 +139,26 @@ def olt_manufacturer_count(label):
         return dict(success=False, msg='query parameter invalid.')
 
     if station and department and city:
-        sql = 'SELECT city_name, department_name, station, substring_index(substring_index(OLT_port, ' \
-              '\'_\', 2), \'_\', -1) AS brand, count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM sum_tianjin_for_interface where city_name = "{}" and department_name = "{}" and station = "{}" ' \
-              'GROUP BY city_name, department_name, station, brand;'.format(city.encode('utf-8'),
+        sql = "SELECT city_name, department_name, station, substring_index(substring_index(OLT_port, " \
+              "'_', 2), '_', -1) AS brand, count(DISTINCT OLT_port) AS olt_count " \
+              "FROM sum_tianjin_for_interface where city_name = '{}' and department_name = '{}' and station = '{}' " \
+              "GROUP BY city_name, department_name, station, brand;".format(city.encode('utf-8'),
                                                                             department.encode('utf-8'),
                                                                             station)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif department and city:
-        sql = 'SELECT city_name, department_name, ' \
-              'substring_index(substring_index(OLT_port, \'_\', 2), \'_\', -1) AS brand, ' \
-              'count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM sum_tianjin_for_interface WHERE city_name = "{}" AND department_name = "{}" ' \
-              'GROUP BY city_name, department_name, brand;'.format(city.encode('utf-8'),
+        sql = "SELECT city_name, department_name, " \
+              "substring_index(substring_index(OLT_port, '_', 2), '_', -1) AS brand, " \
+              "count(DISTINCT OLT_port) AS olt_count " \
+              "FROM sum_tianjin_for_interface WHERE city_name = '{}' AND department_name = '{}' " \
+              "GROUP BY city_name, department_name, brand;".format(city.encode('utf-8'),
                                                                    department.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif city:
-        sql = 'SELECT city_name, substring_index(substring_index(OLT_port, \'_\', 2), \'_\', -1) AS brand, ' \
-              'count(DISTINCT OLT_port) AS olt_count FROM sum_tianjin_for_interface GROUP BY city_name, brand;' \
+        sql = "SELECT city_name, substring_index(substring_index(OLT_port, '_', 2), '_', -1) AS brand, " \
+              "count(DISTINCT OLT_port) AS olt_count FROM sum_tianjin_for_interface GROUP BY city_name, brand;" \
             .format(city.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     else:
         res = {}
     # sql = {
@@ -177,7 +177,7 @@ def olt_manufacturer_count(label):
     #     'ZX': u'中兴',
     #     'FH': u'烽火'
     # }
-    # res = query_list(sql[label]) if label in sql else []
+    # res = cli.fetchall(sql[label]) if label in sql else []
     return dict(success=True, data=res)
 
 
@@ -190,23 +190,23 @@ def olt_user_count(label):
         return dict(success=False, msg='query parameter invalid.')
 
     if station and department and city:
-        sql = 'SELECT city_name, department_name, station, count(*) AS user_count ' \
-              'FROM sum_tianjin_for_interface WHERE city_name = "{}" and department_name = "{}" and station = "{}" ' \
-              'GROUP BY city_name, department_name, station, OLT_port;'.format(city.encode('utf-8'),
+        sql = "SELECT city_name, department_name, station, count(*) AS user_count " \
+              "FROM sum_tianjin_for_interface WHERE city_name = '{}' and department_name = '{}' and station = '{}' " \
+              "GROUP BY city_name, department_name, station, OLT_port;".format(city.encode('utf-8'),
                                                                                department.encode('utf-8'),
                                                                                station)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif department and city:
-        sql = 'SELECT city_name, department_name, count(*) AS user_count ' \
-              'FROM sum_tianjin_for_interface where city_name = "{}" and department_name = "{}" ' \
-              'GROUP BY city_name, department_name, OLT_port;'.format(city.encode('utf-8'),
+        sql = "SELECT city_name, department_name, count(*) AS user_count " \
+              "FROM sum_tianjin_for_interface where city_name = '{}' and department_name = '{}' " \
+              "GROUP BY city_name, department_name, OLT_port;".format(city.encode('utf-8'),
                                                                       department.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif city:
-        sql = 'SELECT city_name, count(*) AS user_count ' \
-              'FROM sum_tianjin_for_interface where city_name = "{}" ' \
-              'GROUP BY city_name, OLT_port;'.format(city.encode('utf-8'))
-        res = query_list(sql)
+        sql = "SELECT city_name, count(*) AS user_count " \
+              "FROM sum_tianjin_for_interface where city_name = '{}' " \
+              "GROUP BY city_name, OLT_port;".format(city.encode('utf-8'))
+        res = cli.fetchall(sql)
     else:
         res = []
     resp = {
@@ -237,7 +237,7 @@ def olt_user_count(label):
     #     'station': 'SELECT city_name, department_name, station, count(*) AS user_count '
     #                'FROM sum_tianjin_for_interface GROUP BY city_name, department_name, station;'
     # }
-    # res = query_list(sql[label]) if label in sql else []
+    # res = cli.fetchall(sql[label]) if label in sql else []
     return dict(success=True, data=resp)
 
 
@@ -250,48 +250,48 @@ def olt_vendor_branch_distribution(label):
         return dict(success=False, msg='query parameter invalid.')
 
     if station and department and city:
-        sql = 'SELECT pon.manufacturer         AS brand, ' \
-              '       pon_users.city_name      AS city_name, ' \
-              '       pon_users.department_name, ' \
-              '       pon_users.station, ' \
-              '       pon.device_model         AS model, ' \
-              '       count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM sum_tianjin_for_interface AS pon_users ' \
-              '       INNER JOIN relay_circuit_mapping AS mapping ' \
-              '        ON mapping.z_end_name = pon_users.OLT_port ' \
-              '       INNER JOIN cu.pon_traffic_statistics_csv AS pon ON pon.ip = mapping.ip ' \
-              'WHERE pon_users.city_name = "{}" and pon_users.department_name = "{}" and pon_users.station = "{}" ' \
-              'GROUP BY pon.manufacturer, city_name, department_name, station, model;'.format(city.encode('utf-8'),
+        sql = "SELECT pon.manufacturer         AS brand, " \
+              "       pon_users.city_name      AS city_name, " \
+              "       pon_users.department_name, " \
+              "       pon_users.station, " \
+              "       pon.device_model         AS model, " \
+              "       count(DISTINCT OLT_port) AS olt_count " \
+              "FROM sum_tianjin_for_interface AS pon_users " \
+              "       INNER JOIN relay_circuit_mapping AS mapping " \
+              "        ON mapping.z_end_name = pon_users.OLT_port " \
+              "       INNER JOIN cu.pon_traffic_statistics_csv AS pon ON pon.ip = mapping.ip " \
+              "WHERE pon_users.city_name = '{}' and pon_users.department_name = '{}' and pon_users.station = '{}' " \
+              "GROUP BY pon.manufacturer, city_name, department_name, station, model;".format(city.encode('utf-8'),
                                                                                               department.encode(
                                                                                                   'utf-8'),
                                                                                               station)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif department and city:
-        sql = 'SELECT pon.manufacturer         AS brand, ' \
-              '       pon_users.city_name      AS city_name, ' \
-              '       pon_users.department_name, ' \
-              '       pon.device_model         AS model, ' \
-              '       count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM sum_tianjin_for_interface AS pon_users ' \
-              '       INNER JOIN relay_circuit_mapping AS mapping ' \
-              '        ON mapping.z_end_name = pon_users.OLT_port ' \
-              '       INNER JOIN cu.pon_traffic_statistics_csv AS pon ON pon.ip = mapping.ip ' \
-              'WHERE pon_users.city_name = "{}" and pon_users.department_name = "{}" ' \
-              'GROUP BY pon.manufacturer, city_name, department_name, model;'.format(city.encode('utf-8'),
+        sql = "SELECT pon.manufacturer         AS brand, " \
+              "       pon_users.city_name      AS city_name, " \
+              "       pon_users.department_name, " \
+              "       pon.device_model         AS model, " \
+              "       count(DISTINCT OLT_port) AS olt_count " \
+              "FROM sum_tianjin_for_interface AS pon_users " \
+              "       INNER JOIN relay_circuit_mapping AS mapping " \
+              "        ON mapping.z_end_name = pon_users.OLT_port " \
+              "       INNER JOIN cu.pon_traffic_statistics_csv AS pon ON pon.ip = mapping.ip " \
+              "WHERE pon_users.city_name = '{}' and pon_users.department_name = '{}' " \
+              "GROUP BY pon.manufacturer, city_name, department_name, model;".format(city.encode('utf-8'),
                                                                                      department.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif city:
-        sql = 'SELECT pon.manufacturer         AS brand, ' \
-              '       pon_users.city_name      AS city_name, ' \
-              '       pon.device_model         AS model, ' \
-              '       count(DISTINCT OLT_port) AS olt_count ' \
-              'FROM sum_tianjin_for_interface AS pon_users ' \
-              '       INNER JOIN relay_circuit_mapping AS mapping ' \
-              '        ON mapping.z_end_name = pon_users.OLT_port ' \
-              '       INNER JOIN cu.pon_traffic_statistics_csv AS pon ON pon.ip = mapping.ip ' \
-              'WHERE pon_users.city_name = "{}" ' \
-              'GROUP BY pon.manufacturer, city_name, model;'.format(city.encode('utf-8'))
-        res = query_list(sql)
+        sql = "SELECT pon.manufacturer         AS brand, " \
+              "       pon_users.city_name      AS city_name, " \
+              "       pon.device_model         AS model, " \
+              "       count(DISTINCT OLT_port) AS olt_count " \
+              "FROM sum_tianjin_for_interface AS pon_users " \
+              "       INNER JOIN relay_circuit_mapping AS mapping " \
+              "        ON mapping.z_end_name = pon_users.OLT_port " \
+              "       INNER JOIN cu.pon_traffic_statistics_csv AS pon ON pon.ip = mapping.ip " \
+              "WHERE pon_users.city_name = '{}' " \
+              "GROUP BY pon.manufacturer, city_name, model;".format(city.encode('utf-8'))
+        res = cli.fetchall(sql)
     else:
         res = {}
 
@@ -327,7 +327,7 @@ def olt_vendor_branch_distribution(label):
     #                'ON mapping.z_end_name = pon_users.OLT_port '
     #                'GROUP BY pon.manufacturer, city_name, department_name, station, model;'
     # }
-    # res = query_list(sql[label]) if label in sql else []
+    # res = cli.fetchall(sql[label]) if label in sql else []
     return dict(success=True, data=res)
 
 
@@ -341,39 +341,39 @@ def pon_port_count(label):
         return dict(success=False, msg='query parameter invalid.')
 
     if olt and station and department and city:
-        sql = 'SELECT csv.city_name, sub_company AS department_name, station, count(port) AS pon_port_count ' \
-              'FROM pon_traffic_statistics_csv AS csv ' \
-              'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip ' \
-              'where csv.city_name = "{}" and department_name = "{}" and station = "{}" and mapping.z_end_name = "{}" ' \
-              'GROUP BY csv.city_name, department_name, station;'.format(city.encode('utf-8'),
+        sql = "SELECT csv.city_name, sub_company AS department_name, station, count(port) AS pon_port_count " \
+              "FROM pon_traffic_statistics_csv AS csv " \
+              "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
+              "where csv.city_name = '{}' and department_name = '{}' and station = '{}' and mapping.z_end_name = '{}' " \
+              "GROUP BY csv.city_name, department_name, station;".format(city.encode('utf-8'),
                                                                          department.encode('utf-8'),
                                                                          station,
                                                                          olt)
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif station and department and city:
-        sql = 'SELECT csv.city_name, sub_company AS department_name, station, count(port) AS pon_port_count ' \
-              'FROM pon_traffic_statistics_csv AS csv ' \
-              'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip ' \
-              'where csv.city_name = "{}" and sub_company = "{}" and station = "{}" ' \
-              'GROUP BY csv.city_name, department_name, station;'.format(city.encode('utf-8'),
+        sql = "SELECT csv.city_name, sub_company AS department_name, station, count(port) AS pon_port_count " \
+              "FROM pon_traffic_statistics_csv AS csv " \
+              "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
+              "where csv.city_name = '{}' and sub_company = '{}' and station = '{}' " \
+              "GROUP BY csv.city_name, department_name, station;".format(city.encode('utf-8'),
                                                                          department.encode('utf-8'),
                                                                          station)
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif department and city:
-        sql = 'SELECT csv.city_name, sub_company AS department_name, count(port) AS pon_port_count ' \
-              'FROM pon_traffic_statistics_csv AS csv ' \
-              'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip ' \
-              'where csv.city_name = "{}" and sub_company = "{}" ' \
-              'GROUP BY csv.city_name, department_name;'.format(city.encode('utf-8'),
+        sql = "SELECT csv.city_name, sub_company AS department_name, count(port) AS pon_port_count " \
+              "FROM pon_traffic_statistics_csv AS csv " \
+              "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
+              "where csv.city_name = '{}'' and sub_company = '{}'' " \
+              "GROUP BY csv.city_name, department_name;".format(city.encode('utf-8'),
                                                                 department.encode('utf-8'))
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif city:
         sql = 'SELECT csv.city_name, count(port) AS pon_port_count ' \
               'FROM pon_traffic_statistics_csv AS csv ' \
               'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip ' \
               'where csv.city_name = "{}" ' \
               'GROUP BY csv.city_name;'.format(city.encode('utf-8'))
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     else:
         res = {}
     # sql = {
@@ -390,7 +390,7 @@ def pon_port_count(label):
     #                'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip '
     #                'GROUP BY city_name, department_name, station;',
     # }
-    # res = query_list(sql[label]) if label in sql else []
+    # res = cli.fetchall(sql[label]) if label in sql else []
     return dict(success=True, data=res)
 
 
@@ -422,7 +422,7 @@ def pon_port_usage_rate(label):
               'GROUP BY csv.city_name, sub_company, mapping.station, olt_name;'.format(city.encode('utf-8'),
                                                                                        department.encode('utf-8'),
                                                                                        station, olt)
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif station and department and city:
         sql = 'SELECT ' \
               'csv.city_name, ' \
@@ -442,7 +442,7 @@ def pon_port_usage_rate(label):
               'GROUP BY csv.city_name, sub_company, mapping.station;'.format(city.encode('utf-8'),
                                                                              department.encode('utf-8'),
                                                                              station)
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif department and city:
         sql = 'SELECT city_name, sub_company AS department_name, ' \
               'sum(if(input_peak_traffic = \'0.00Mb/s\' ' \
@@ -457,7 +457,7 @@ def pon_port_usage_rate(label):
               'where city_name = "{}" and sub_company = "{}" ' \
               'GROUP BY city_name, department_name;'.format(city.encode('utf-8'),
                                                             department.encode('utf-8'))
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif city:
         sql = 'SELECT city_name, sum(if(input_peak_traffic = \'0.00Mb/s\' ' \
               'AND input_average_traffic = \'0.00Mb/s\' ' \
@@ -470,7 +470,7 @@ def pon_port_usage_rate(label):
               'FROM pon_traffic_statistics_csv ' \
               'where city_name = "{}" ' \
               'GROUP BY city_name;'.format(city.encode('utf-8'))
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     else:
         res = {}
     # sql = {
@@ -526,7 +526,7 @@ def pon_port_usage_rate(label):
     #            'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip '
     #            'GROUP BY csv.city_name, sub_company, mapping.station, olt_name;'
     # }
-    # res = query_list(sql[label]) if label in sql else {}
+    # res = cli.fetchall(sql[label]) if label in sql else {}
     # for i in res:
     if res:
         for k in ['idle_port_count', 'used_port_count']:
@@ -570,7 +570,7 @@ def service_board_usage_rate(label):
               "GROUP BY city_name, x.department_name, x.station, x.olt;".format(city.encode('utf-8'),
                                                                                 department.encode('utf-8'),
                                                                                 station, olt)
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif station and department and city:
         sql = "SELECT x.city_name, x.department_name, x.station, " \
               "sum(device.service_slot_count) AS total_service_slot_count, " \
@@ -586,11 +586,11 @@ def service_board_usage_rate(label):
               "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip " \
               "GROUP BY city_name, itf.department_name, itf.station, itf.OLT_port, csv.device_model) AS x " \
               "INNER JOIN olt_device AS device ON x.device_model = device.olt_model " \
-              "where x.city_name = \"{}\" and x.department_name = \"{}\" and x.station = \"{}\" " \
+              "where x.city_name = '{}' and x.department_name = '{}' and x.station = '{}' " \
               "GROUP BY city_name, x.department_name, x.station;".format(city.encode('utf-8'),
                                                                          department.encode('utf-8'),
                                                                          station)
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif department and city:
         sql = "SELECT x.city_name, x.department_name, " \
               "sum(device.service_slot_count) AS total_service_slot_count, " \
@@ -606,10 +606,10 @@ def service_board_usage_rate(label):
               "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip " \
               "GROUP BY city_name, itf.department_name, itf.OLT_port, csv.device_model) AS x " \
               "INNER JOIN olt_device AS device ON x.device_model = device.olt_model " \
-              "where x.city_name = \"{}\" and x.department_name = \"{}\" " \
+              "where x.city_name = '{}' and x.department_name = '{}' " \
               "GROUP BY city_name, x.department_name;".format(city.encode('utf-8'),
                                                               department.encode('utf-8'))
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif city:
         sql = "SELECT x.city_name, " \
               "sum(device.service_slot_count) AS total_service_slot_count, " \
@@ -625,9 +625,9 @@ def service_board_usage_rate(label):
               "INNER JOIN pon_traffic_statistics_csv AS csv ON csv.ip = mapping.ip " \
               "GROUP BY city_name, itf.OLT_port, csv.device_model) AS x " \
               "INNER JOIN olt_device AS device ON x.device_model = device.olt_model " \
-              "where x.city_name = \"{}\" " \
+              "where x.city_name = '{}' " \
               "GROUP BY city_name;".format(city.encode('utf-8'))
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     else:
         res = {}
     # sql = {
@@ -677,7 +677,7 @@ def service_board_usage_rate(label):
     #                "INNER JOIN olt_device AS device ON x.device_model = device.olt_model "
     #                "GROUP BY city_name, x.department_name, x.station;"
     # }
-    # res = query_list(sql[label]) if label in sql else {}
+    # res = cli.fetchall(sql[label]) if label in sql else {}
     if res:
         for k in ['total_service_slot_count', 'used_service_slot_count']:
             res[k] = int(res[k])
@@ -705,7 +705,7 @@ def pon_type(olt, station, department, city):
                                                                                  department.encode('utf-8'),
                                                                                  station,
                                                                                  olt)
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif station and department and city:
         sql = "SELECT " \
               "csv.city_name, " \
@@ -719,7 +719,7 @@ def pon_type(olt, station, department, city):
               "GROUP BY city_name, department_name, station;".format(city.encode('utf-8'),
                                                                      department.encode('utf-8'),
                                                                      station)
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif department and city:
         sql = "SELECT " \
               "csv.city_name, " \
@@ -731,7 +731,7 @@ def pon_type(olt, station, department, city):
               "where csv.city_name = '{}' and sub_company = '{}' " \
               "GROUP BY city_name, department_name;".format(city.encode('utf-8'),
                                                             department.encode('utf-8'))
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     elif city:
         sql = "SELECT csv.city_name, " \
               "sum((if(bandwidth IN ('1G', '1.25G', '2.5G', NULL), 1, 0))) AS `1GE_count`, " \
@@ -740,7 +740,7 @@ def pon_type(olt, station, department, city):
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
               "where csv.city_name = '{}' " \
               "GROUP BY csv.city_name;".format(city.encode('utf-8'))
-        res = query_one(sql)
+        res = cli.fetchone(sql)
     else:
         res = {}
     if res:
@@ -767,7 +767,7 @@ def vendor_pon_type(station, department, city):
               "GROUP BY city_name, department_name, station, manufacturer;".format(city.encode('utf-8'),
                                                                                    department.encode('utf-8'),
                                                                                    station)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif department and city:
         sql = "SELECT " \
               "csv.city_name, " \
@@ -780,7 +780,7 @@ def vendor_pon_type(station, department, city):
               "where csv.city_name = '{}' and sub_company = '{}' " \
               "GROUP BY city_name, department_name, manufacturer;".format(city.encode('utf-8'),
                                                                           department.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif city:
         sql = "SELECT csv.city_name, manufacturer, " \
               "sum((if(bandwidth IN ('1G', '1.25G', '2.5G', NULL), 1, 0))) AS `1GE_count`, " \
@@ -789,7 +789,7 @@ def vendor_pon_type(station, department, city):
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
               "where csv.city_name = '{}' " \
               "GROUP BY csv.city_name, manufacturer;".format(city.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     else:
         res = []
     if res:
@@ -824,7 +824,7 @@ def service_board_slot_stat(station, department, city):
               "GROUP BY city_name, x.department_name, x.station, x.olt;".format(city.encode('utf-8'),
                                                                                 department.encode('utf-8'),
                                                                                 station)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif department and city:
         sql = "SELECT x.city_name, x.department_name, " \
               "sum(device.service_slot_count) AS total_service_slot_count, " \
@@ -844,7 +844,7 @@ def service_board_slot_stat(station, department, city):
               "INNER JOIN olt_device AS device ON x.device_model = device.olt_model " \
               "GROUP BY city_name, x.department_name, x.olt;".format(city.encode('utf-8'),
                                                                      department.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif city:
         sql = "SELECT x.city_name, " \
               "sum(device.service_slot_count) AS total_service_slot_count, " \
@@ -862,7 +862,7 @@ def service_board_slot_stat(station, department, city):
               "GROUP BY itf.city_name, itf.OLT_port, csv.device_model) AS x " \
               "INNER JOIN olt_device AS device ON x.device_model = device.olt_model " \
               "GROUP BY city_name, x.olt;"
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     else:
         res = []
 
@@ -912,7 +912,7 @@ def pon_port_traffic_stat(olt, station, department, city):
                                                                   department.encode('utf-8'),
                                                                   station,
                                                                   olt)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif station and department and city:
         sql = "SELECT " \
               "csv.city_name, " \
@@ -926,7 +926,7 @@ def pon_port_traffic_stat(olt, station, department, city):
               "and station = '{}'; ".format(city.encode('utf-8'),
                                             department.encode('utf-8'),
                                             station)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif department and city:
         sql = "SELECT " \
               "csv.city_name, " \
@@ -938,7 +938,7 @@ def pon_port_traffic_stat(olt, station, department, city):
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
               "WHERE csv.city_name = '{}' and department_name = '{}';".format(city.encode('utf-8'),
                                                                               department.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif city:
         sql = "SELECT " \
               "csv.city_name, " \
@@ -949,7 +949,7 @@ def pon_port_traffic_stat(olt, station, department, city):
               "FROM pon_traffic_statistics_csv AS csv " \
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
               "WHERE csv.city_name = '{}';".format(city.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     else:
         res = []
     resp = {
@@ -991,7 +991,7 @@ def pon_port_users_stat(olt, station, department, city):
                                                department.encode('utf-8'),
                                                station,
                                                olt)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif station and department and city:
         sql = "SELECT " \
               "package_speed, " \
@@ -1002,7 +1002,7 @@ def pon_port_users_stat(olt, station, department, city):
               "GROUP BY package_speed;".format(city.encode('utf-8'),
                                                department.encode('utf-8'),
                                                station)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif department and city:
         sql = "SELECT " \
               "package_speed, " \
@@ -1012,7 +1012,7 @@ def pon_port_users_stat(olt, station, department, city):
               "where city_name = '{}' and department_name = '{}' " \
               "GROUP BY package_speed;".format(city.encode('utf-8'),
                                                department.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif city:
         sql = "SELECT " \
               "package_speed, " \
@@ -1021,7 +1021,7 @@ def pon_port_users_stat(olt, station, department, city):
               "FROM sum_tianjin_for_interface " \
               "where city_name = '{}' " \
               "GROUP BY package_speed;".format(city.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     else:
         res = []
 
@@ -1075,7 +1075,7 @@ def olt_uplink_port_count(olt, station, department, city):
                                            department.encode('utf-8'),
                                            station,
                                            olt)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif station and department and city:
         sql = "select bandwidth, sum(uplink_port_count) as cnt from (" \
               "SELECT bandwidth, " \
@@ -1087,7 +1087,7 @@ def olt_uplink_port_count(olt, station, department, city):
               "group by bandwidth;".format(city.encode('utf-8'),
                                            department.encode('utf-8'),
                                            station)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif department and city:
         sql = "select bandwidth, sum(uplink_port_count) as cnt from(" \
               "SELECT bandwidth, " \
@@ -1098,7 +1098,7 @@ def olt_uplink_port_count(olt, station, department, city):
               "GROUP BY bandwidth, csv.ip) as x " \
               "group by bandwidth;".format(city.encode('utf-8'),
                                            department.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif city:
         sql = "select bandwidth, sum(uplink_port_count) as cnt from(" \
               "SELECT bandwidth, " \
@@ -1108,7 +1108,7 @@ def olt_uplink_port_count(olt, station, department, city):
               "WHERE mapping.city_name = '{}' " \
               "GROUP BY bandwidth, csv.ip) as x " \
               "group by bandwidth;".format(city.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     else:
         res = []
     if res:
@@ -1131,7 +1131,7 @@ def olt_10ge_uplink_count(station, department, city):
               "GROUP BY bandwidth, csv.ip;".format(city.encode('utf-8'),
                                                    department.encode('utf-8'),
                                                    station)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif department and city:
         sql = "SELECT bandwidth " \
               "FROM uplink_traffic_statistics_csv as csv " \
@@ -1139,14 +1139,14 @@ def olt_10ge_uplink_count(station, department, city):
               "where mapping.city_name = '{}' and csv.department_name = '{}' " \
               "GROUP BY bandwidth, csv.ip;".format(city.encode('utf-8'),
                                                    department.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif city:
         sql = "SELECT bandwidth " \
               "FROM uplink_traffic_statistics_csv as csv " \
               "INNER JOIN relay_circuit_mapping as mapping on mapping.ip = csv.ip " \
               "where mapping.city_name = '{}' " \
               "GROUP BY bandwidth, csv.ip;".format(city.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     else:
         res = []
     resp = {
@@ -1177,7 +1177,7 @@ def olt_uplink_stat(station, department, city):
               "GROUP BY z_end_name;".format(city.encode('utf-8'),
                                             department.encode('utf-8'),
                                             station)
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif department and city:
         sql = "SELECT " \
               "z_end_name                         AS olt_name, " \
@@ -1193,7 +1193,7 @@ def olt_uplink_stat(station, department, city):
               "WHERE mapping.z_end_name BETWEEN x.mi AND x.ma " \
               "GROUP BY z_end_name;".format(city.encode('utf-8'),
                                             department.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     elif city:
         sql = "SELECT " \
               "z_end_name                         AS olt_name, " \
@@ -1208,7 +1208,7 @@ def olt_uplink_stat(station, department, city):
               " GROUP BY OLT_port) AS x " \
               "WHERE mapping.z_end_name BETWEEN x.mi AND x.ma " \
               "GROUP BY z_end_name;".format(city.encode('utf-8'))
-        res = query_list(sql)
+        res = cli.fetchall(sql)
     else:
         res = []
 

@@ -6,11 +6,6 @@ from flask import request
 bp = Blueprint('olt-bp', __name__, url_prefix='/api')
 
 
-@bp.route('/menus/')
-def get_menus():
-    return menus()
-
-
 @bp.route('/menus/department/')
 def get_departments():
     return menu_department()
