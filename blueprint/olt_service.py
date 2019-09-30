@@ -292,16 +292,16 @@ def pon_port_count(label):
         sql = "SELECT csv.city_name, sub_company AS department_name, count(port) AS pon_port_count " \
               "FROM pon_traffic_statistics_csv AS csv " \
               "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
-              "where csv.city_name = '{}'' and sub_company = '{}'' " \
+              "where csv.city_name = '{}' and sub_company = '{}' " \
               "GROUP BY csv.city_name, department_name;".format(city.encode('utf-8'),
                                                                 department.encode('utf-8'))
         res = cli.fetchone(sql)
     elif city:
-        sql = 'SELECT csv.city_name, count(port) AS pon_port_count ' \
-              'FROM pon_traffic_statistics_csv AS csv ' \
-              'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip ' \
-              'where csv.city_name = "{}" ' \
-              'GROUP BY csv.city_name;'.format(city.encode('utf-8'))
+        sql = "SELECT csv.city_name, count(port) AS pon_port_count " \
+              "FROM pon_traffic_statistics_csv AS csv " \
+              "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
+              "where csv.city_name = '{}' " \
+              "GROUP BY csv.city_name;".format(city.encode('utf-8'))
         res = cli.fetchone(sql)
     else:
         res = {}
@@ -318,72 +318,72 @@ def pon_port_usage_rate(label):
         return dict(success=False, msg='query parameter invalid.')
 
     if olt and station and department and city:
-        sql = 'SELECT ' \
-              'csv.city_name, ' \
-              'sub_company                                             AS department_name, ' \
-              'mapping.station, mapping.z_end_name AS olt_name, ' \
-              'sum(if(input_peak_traffic = \'0.00Mb/s\' ' \
-              'AND input_average_traffic = \'0.00Mb/s\' ' \
-              'AND output_peak_traffic = \'0.00Mb/s\' ' \
-              'AND output_average_traffic = \'0.00Mb/s\', 1, 0))  AS idle_port_count, ' \
-              'sum(if(input_peak_traffic <> \'0.00Mb/s\' ' \
-              'OR input_average_traffic <> \'0.00Mb/s\' ' \
-              'OR output_peak_traffic <> \'0.00Mb/s\' ' \
-              'OR output_average_traffic <> \'0.00Mb/s\', 1, 0)) AS used_port_count ' \
-              'FROM pon_traffic_statistics_csv AS csv ' \
-              'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip ' \
-              'WHERE csv.city_name = "{}" AND sub_company = "{}" AND station = "{}" AND z_end_name = "{}" ' \
-              'GROUP BY csv.city_name, sub_company, mapping.station, olt_name;'.format(city.encode('utf-8'),
+        sql = "SELECT " \
+              "csv.city_name, " \
+              "sub_company                                             AS department_name, " \
+              "mapping.station, mapping.z_end_name AS olt_name, " \
+              "sum(if(input_peak_traffic = '0.00Mb/s' " \
+              "AND input_average_traffic = '0.00Mb/s' " \
+              "AND output_peak_traffic = '0.00Mb/s' " \
+              "AND output_average_traffic = '0.00Mb/s', 1, 0))  AS idle_port_count, " \
+              "sum(if(input_peak_traffic <> '0.00Mb/s' " \
+              "OR input_average_traffic <> '0.00Mb/s' " \
+              "OR output_peak_traffic <> '0.00Mb/s' " \
+              "OR output_average_traffic <> '0.00Mb/s', 1, 0)) AS used_port_count " \
+              "FROM pon_traffic_statistics_csv AS csv " \
+              "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
+              "WHERE csv.city_name = '{}' AND sub_company = '{}' AND station = '{}' AND z_end_name = '{}' " \
+              "GROUP BY csv.city_name, sub_company, mapping.station, olt_name;".format(city.encode('utf-8'),
                                                                                        department.encode('utf-8'),
                                                                                        station, olt)
         res = cli.fetchone(sql)
     elif station and department and city:
-        sql = 'SELECT ' \
-              'csv.city_name, ' \
-              'sub_company                                             AS department_name, ' \
-              'mapping.station, ' \
-              'sum(if(input_peak_traffic = \'0.00Mb/s\' ' \
-              'AND input_average_traffic = \'0.00Mb/s\' ' \
-              'AND output_peak_traffic = \'0.00Mb/s\' ' \
-              'AND output_average_traffic = \'0.00Mb/s\', 1, 0))  AS idle_port_count, ' \
-              'sum(if(input_peak_traffic <> \'0.00Mb/s\' ' \
-              'OR input_average_traffic <> \'0.00Mb/s\' ' \
-              'OR output_peak_traffic <> \'0.00Mb/s\' ' \
-              'OR output_average_traffic <> \'0.00Mb/s\', 1, 0)) AS used_port_count ' \
-              'FROM pon_traffic_statistics_csv AS csv ' \
-              'INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip ' \
-              'where csv.city_name = "{}" and sub_company = "{}" and station = "{}" ' \
-              'GROUP BY csv.city_name, sub_company, mapping.station;'.format(city.encode('utf-8'),
+        sql = "SELECT " \
+              "csv.city_name, " \
+              "sub_company                                             AS department_name, " \
+              "mapping.station, " \
+              "sum(if(input_peak_traffic = '0.00Mb/s' " \
+              "AND input_average_traffic = '0.00Mb/s' " \
+              "AND output_peak_traffic = '0.00Mb/s' " \
+              "AND output_average_traffic = '0.00Mb/s', 1, 0))  AS idle_port_count, " \
+              "sum(if(input_peak_traffic <> '0.00Mb/s' " \
+              "OR input_average_traffic <> '0.00Mb/s' " \
+              "OR output_peak_traffic <> '0.00Mb/s' " \
+              "OR output_average_traffic <> '0.00Mb/s', 1, 0)) AS used_port_count " \
+              "FROM pon_traffic_statistics_csv AS csv " \
+              "INNER JOIN relay_circuit_mapping AS mapping ON mapping.ip = csv.ip " \
+              "where csv.city_name = '{}' and sub_company = '{}' and station = '{}' " \
+              "GROUP BY csv.city_name, sub_company, mapping.station;".format(city.encode('utf-8'),
                                                                              department.encode('utf-8'),
                                                                              station)
         res = cli.fetchone(sql)
     elif department and city:
-        sql = 'SELECT city_name, sub_company AS department_name, ' \
-              'sum(if(input_peak_traffic = \'0.00Mb/s\' ' \
-              'AND input_average_traffic = \'0.00Mb/s\' ' \
-              'AND output_peak_traffic = \'0.00Mb/s\' ' \
-              'AND output_average_traffic = \'0.00Mb/s\', 1, 0)) AS idle_port_count, ' \
-              'sum(if(input_peak_traffic <> \'0.00Mb/s\' ' \
-              'OR input_average_traffic <> \'0.00Mb/s\' ' \
-              'OR output_peak_traffic <> \'0.00Mb/s\' ' \
-              'OR output_average_traffic <> \'0.00Mb/s\', 1, 0)) AS used_port_count ' \
-              'FROM pon_traffic_statistics_csv ' \
-              'where city_name = "{}" and sub_company = "{}" ' \
-              'GROUP BY city_name, department_name;'.format(city.encode('utf-8'),
+        sql = "SELECT city_name, sub_company AS department_name, " \
+              "sum(if(input_peak_traffic = '0.00Mb/s' " \
+              "AND input_average_traffic = '0.00Mb/s' " \
+              "AND output_peak_traffic = '0.00Mb/s' " \
+              "AND output_average_traffic = '0.00Mb/s', 1, 0)) AS idle_port_count, " \
+              "sum(if(input_peak_traffic <> '0.00Mb/s' " \
+              "OR input_average_traffic <> '0.00Mb/s' " \
+              "OR output_peak_traffic <> '0.00Mb/s' " \
+              "OR output_average_traffic <> '0.00Mb/s', 1, 0)) AS used_port_count " \
+              "FROM pon_traffic_statistics_csv " \
+              "where city_name = '{}' and sub_company = '{}' " \
+              "GROUP BY city_name, department_name;".format(city.encode('utf-8'),
                                                             department.encode('utf-8'))
         res = cli.fetchone(sql)
     elif city:
-        sql = 'SELECT city_name, sum(if(input_peak_traffic = \'0.00Mb/s\' ' \
-              'AND input_average_traffic = \'0.00Mb/s\' ' \
-              'AND output_peak_traffic = \'0.00Mb/s\' ' \
-              'AND output_average_traffic = \'0.00Mb/s\', 1, 0)) AS idle_port_count, ' \
-              'sum(if(input_peak_traffic <> \'0.00Mb/s\' ' \
-              'OR input_average_traffic <> \'0.00Mb/s\' ' \
-              'OR output_peak_traffic <> \'0.00Mb/s\' ' \
-              'OR output_average_traffic <> \'0.00Mb/s\', 1, 0)) AS used_port_count ' \
-              'FROM pon_traffic_statistics_csv ' \
-              'where city_name = "{}" ' \
-              'GROUP BY city_name;'.format(city.encode('utf-8'))
+        sql = "SELECT city_name, sum(if(input_peak_traffic = '0.00Mb/s' " \
+              "AND input_average_traffic = '0.00Mb/s' " \
+              "AND output_peak_traffic = '0.00Mb/s' " \
+              "AND output_average_traffic = '0.00Mb/s', 1, 0)) AS idle_port_count, " \
+              "sum(if(input_peak_traffic <> '0.00Mb/s' " \
+              "OR input_average_traffic <> '0.00Mb/s' " \
+              "OR output_peak_traffic <> '0.00Mb/s' " \
+              "OR output_average_traffic <> '0.00Mb/s', 1, 0)) AS used_port_count " \
+              "FROM pon_traffic_statistics_csv " \
+              "where city_name = '{}' " \
+              "GROUP BY city_name;".format(city.encode('utf-8'))
         res = cli.fetchone(sql)
     else:
         res = {}
