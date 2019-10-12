@@ -37,6 +37,13 @@ class MySQLClient:
         con.close()
         return r
 
+    def execute(self, sql):
+        con = self.cp.get_connection()
+        cur = con.cursor(cursor_class=MySQLCursorBufferedDict)
+        cur.execute(sql)
+        cur.close()
+        con.close()
+
 
 cli = MySQLClient()
 
