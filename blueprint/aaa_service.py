@@ -1,15 +1,75 @@
-# encoding = utf-8
+# encoding=utf-8
 
 from db.client import cli
 from utils.tools import parse_traffic_rate
+from itertools import groupby
+from datetime import date
 
 import numpy as np
+
+TREND_K = 0.1
+
+
+class Trend:
+    INCREASE = 1
+    STABLE = 2
+    DECREASE = 3
+
+    def __init__(self):
+        raise NotImplemented()
+
+    @staticmethod
+    def to_str(trend):
+        if trend == Trend.STABLE:
+            return 'STABLE'
+        elif trend == Trend.INCREASE:
+            return 'INCREASE'
+        elif trend == Trend.DECREASE:
+            return 'DECREASE'
+        else:
+            return 'INVALID'
+
+
+def check_trend(k):
+    """
+    :type k: float
+    :param k:
+    :return:
+    """
+    if -TREND_K <= k <= TREND_K:
+        return Trend.STABLE
+    elif k > TREND_K:
+        return Trend.INCREASE
+    else:
+        return Trend.DECREASE
+
+
+def build_trend_line(k, b, x_list):
+    """
+    :type k: float
+    :type b: float
+    :type x_list: list[float]
+    :param k:
+    :param b:
+    :param x_list:
+    :return:
+    """
+    x1, x2 = min(x_list), max(x_list)
+    y1, y2 = round(k * x1 + b, 2), round(k * x2 + b, 2)
+    return [[x1, y1], x2, y2]
 
 
 def distribution(data, bins_interval):
     bins = list(range(min(data), max(data) + bins_interval, bins_interval))
     hist = np.histogram(data, bins)
     return hist[0]
+
+
+def linear_fit(x, y):
+    x_data = x
+    y_data = y
+    poly = np.polyfit(x_data, y_data, deg=1)
+    return poly[0], poly[1]
 
 
 def get_top_k_aaa_user(dp, st, dt, k):
@@ -105,3 +165,74 @@ def get_pon_port_traffic_statistics(city_name, department_name, interval):
         }
         res[k]['x'] = range(0, len(res[k]['y']) * interval, interval)
     return res
+
+
+def get_pon_trend(city_name, department_name, station, olt_name):
+    """
+    :type city_name: str
+    :type department_name: str
+    :type station: str
+    :type olt_name: str
+    :param city_name:
+    :param department_name:
+    :param station:
+    :param olt_name:
+    :return:
+    """
+    if city_name and department_name and station and olt_name:
+        sql = "SELECT department_name, station, olt_name, input_avg, input_peak, " \
+              "output_avg, output_peak, pon_board, pon_port, date FROM pon_traffic_time_line " \
+              "WHERE department_name = '{}' " \
+              "AND station = '{}' " \
+              "AND olt_name = '{}'" \
+              "ORDER BY department_name, station, olt_name, pon_board, pon_port, date;".format(department_name,
+                                                                                               station,
+                                                                                               olt_name)
+    elif city_name and department_name and station:
+        sql = "SELECT department_name, station, olt_name, input_avg, input_peak, " \
+              "output_avg, output_peak, pon_board, pon_port, date FROM pon_traffic_time_line " \
+              "WHERE department_name = '{}' " \
+              "AND station = '{}'" \
+              "ORDER BY department_name, station, olt_name, pon_board, pon_port, date;".format(department_name, station)
+    elif city_name and department_name:
+        sql = "SELECT department_name, station, olt_name, input_avg, input_peak, " \
+              "output_avg, output_peak, pon_board, pon_port, date FROM pon_traffic_time_line " \
+              "WHERE department_name = '{}'" \
+              "ORDER BY department_name, station, olt_name, pon_board, pon_port, date;".format(department_name)
+    else:
+        return dict(success=False, msg='invalid parameters.')
+    r = cli.fetchall(sql)
+    z = groupby(r, lambda e: e['department_name'])
+    res = []
+    for department, stations in z:
+        for station, olts in groupby(stations, lambda e: e['station']):
+            for olt, boards in groupby(olts, lambda e: e['olt_name']):
+                for board, ports in groupby(boards, lambda e: e['pon_board']):
+                    for p, records in groupby(ports, lambda e: e['pon_port']):
+                        rs = list(records)
+                        # x = map(lambda e: e['date'], p)
+                        x = [i for i in range(1, len(rs) + 1)]
+                        for k in ['input_avg', 'input_peak', 'output_avg', 'output_peak']:
+                            y = map(lambda e: e[k], rs)
+                            k, b = linear_fit(x, y)
+                            trend = check_trend(k)
+                            m = {
+                                'department': department,
+                                'station': station,
+                                'olt': olt,
+                                'pon_board': board,
+                                'pon_port': p,
+                                'type': Trend.to_str(trend),
+                                'samples': {
+                                    'x': map(lambda e: date.isoformat(e['date']), rs),
+                                    'y': y
+                                },
+                                'trend_line': build_trend_line(k, b, x)
+                            }
+                            res.append(m)
+    return res
+
+
+if __name__ == '__main__':
+    r = get_pon_trend('tianjin', '南开分公司', 'NKKYD', 'NKKYD_HW_OLT02')
+    print r
