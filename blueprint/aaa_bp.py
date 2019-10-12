@@ -20,6 +20,8 @@ INTERVAL = {
     '10': 10
 }
 
+TREND_TAG = ['input_avg', 'input_peak', 'output_avg', 'output_peak']
+
 
 @bp.route('/top-k/')
 @json_resp
@@ -40,4 +42,17 @@ def get_pon_port_statistics():
     department_name = request.args.get('department_name', '').encode('utf-8')
     interval = request.args.get('interval', '').encode('utf-8')
     r = get_pon_port_traffic_statistics(city_name, department_name, INTERVAL.get(interval, 5))
+    return dict(success=True, data=r)
+
+
+@bp.route('/pon-port/trend/')
+@json_resp
+def get_trend():
+    city_name = request.args.get('city_name', '').encode('utf-8')
+    department = request.args.get('department_name', '').encode('utf-8')
+    station = request.args.get('station', '').encode('utf-8')
+    olt = request.args.get('olt_name', '').encode('utf-8')
+    tag = request.args.get('tag', '').encode('utf8')
+    tag = tag if tag in TREND_TAG else 'input_avg'
+    r = get_pon_trend(city_name, department, station, olt, tag)
     return dict(success=True, data=r)
