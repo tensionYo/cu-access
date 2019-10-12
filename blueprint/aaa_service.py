@@ -56,7 +56,12 @@ def build_trend_line(k, b, x_list):
     """
     x1, x2 = min(x_list), max(x_list)
     y1, y2 = round(k * x1 + b, 2), round(k * x2 + b, 2)
-    return [[x1, y1], x2, y2]
+    return {
+        'x1': x1,
+        'y1': y1,
+        'x2': x2,
+        'y2': y2
+    }
 
 
 def distribution(data, bins_interval):
@@ -167,7 +172,7 @@ def get_pon_port_traffic_statistics(city_name, department_name, interval):
     return res
 
 
-def get_pon_trend(city_name, department_name, station, olt_name):
+def get_pon_trend(city_name, department_name, station, olt_name, tag):
     """
     :type city_name: str
     :type department_name: str
@@ -212,10 +217,13 @@ def get_pon_trend(city_name, department_name, station, olt_name):
                         rs = list(records)
                         # x = map(lambda e: e['date'], p)
                         x = [i for i in range(1, len(rs) + 1)]
-                        for k in ['input_avg', 'input_peak', 'output_avg', 'output_peak']:
-                            y = map(lambda e: e[k], rs)
+                        # for k in ['input_avg', 'input_peak', 'output_avg', 'output_peak']:
+                        for key in [tag]:
+                            y = map(lambda e: e[key], rs)
                             k, b = linear_fit(x, y)
                             trend = check_trend(k)
+                            tl = build_trend_line(k, b, x)
+                            tl.update({'x1': date.isoformat(rs[0]['date']), 'x2': date.isoformat(rs[-1]['date'])})
                             m = {
                                 'department': department,
                                 'station': station,
@@ -223,11 +231,12 @@ def get_pon_trend(city_name, department_name, station, olt_name):
                                 'pon_board': board,
                                 'pon_port': p,
                                 'type': Trend.to_str(trend),
+                                'traffic_tag': key,
                                 'samples': {
                                     'x': map(lambda e: date.isoformat(e['date']), rs),
                                     'y': y
                                 },
-                                'trend_line': build_trend_line(k, b, x)
+                                'trend_line': tl
                             }
                             res.append(m)
     return res
