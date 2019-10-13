@@ -217,31 +217,30 @@ def get_pon_trend(city_name, department_name, station, olt_name, tag):
                         rs = list(records)
                         # x = map(lambda e: e['date'], p)
                         x = [i for i in range(1, len(rs) + 1)]
-                        # for k in ['input_avg', 'input_peak', 'output_avg', 'output_peak']:
-                        for key in [tag]:
-                            y = map(lambda e: e[key], rs)
-                            k, b = linear_fit(x, y)
-                            trend = check_trend(k)
-                            tl = build_trend_line(k, b, x)
-                            tl.update({'x1': date.isoformat(rs[0]['date']), 'x2': date.isoformat(rs[-1]['date'])})
-                            m = {
-                                'department': department,
-                                'station': station,
-                                'olt': olt,
-                                'pon_board': board,
-                                'pon_port': p,
-                                'type': Trend.to_str(trend),
-                                'traffic_tag': key,
-                                'samples': {
-                                    'x': map(lambda e: date.isoformat(e['date']), rs),
-                                    'y': y
-                                },
-                                'trend_line': tl
-                            }
-                            res.append(m)
+                        y = map(lambda e: e['{}_avg'.format(tag)], rs)
+                        k, b = linear_fit(x, y)
+                        trend = check_trend(k)
+                        tl = build_trend_line(k, b, x)
+                        tl.update({'x1': date.isoformat(rs[0]['date']), 'x2': date.isoformat(rs[-1]['date'])})
+                        m = {
+                            'department': department,
+                            'station': station,
+                            'olt': olt,
+                            'pon_board': board,
+                            'pon_port': p,
+                            'type': Trend.to_str(trend),
+                            'traffic_tag': tag,
+                            'samples': {
+                                'x': map(lambda e: date.isoformat(e['date']), rs),
+                                'avg': y,
+                                'peak': map(lambda e: e['{}_peak'.format(tag)], rs)
+                            },
+                            'trend_line': tl
+                        }
+                        res.append(m)
     return res
 
 
 if __name__ == '__main__':
-    r = get_pon_trend('tianjin', '南开分公司', 'NKKYD', 'NKKYD_HW_OLT02')
+    r = get_pon_trend('tianjin', '南开分公司', 'NKKYD', 'NKKYD_HW_OLT02', 'input')
     print r

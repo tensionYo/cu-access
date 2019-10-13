@@ -20,7 +20,7 @@ INTERVAL = {
     '10': 10
 }
 
-TREND_TAG = ['input_avg', 'input_peak', 'output_avg', 'output_peak']
+TREND_TAG = ['input', 'output']
 
 
 @bp.route('/top-k/')
@@ -53,6 +53,6 @@ def get_trend():
     station = request.args.get('station', '').encode('utf-8')
     olt = request.args.get('olt_name', '').encode('utf-8')
     tag = request.args.get('tag', '').encode('utf8')
-    tag = tag if tag in TREND_TAG else 'input_avg'
+    tag = tag if tag in TREND_TAG else 'input'
     r = get_pon_trend(city_name, department, station, olt, tag)
     return dict(success=True, data=r)
