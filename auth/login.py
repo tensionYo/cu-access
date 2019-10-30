@@ -23,7 +23,7 @@ def get_user_by_user_id(user_id):
     :param user_id:
     :return:
     """
-    sql = "select user_id, login_name, password from cu_user where user_id = '{}';".format(user_id)
+    sql = "select user_id, login_name, password, is_admin from cu_user where user_id = '{}';".format(user_id)
     r = cli.fetchone(sql)
     return build_user_class(r)
 
