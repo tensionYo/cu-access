@@ -10,7 +10,7 @@ def admin_role(func):
     def __func(*args, **kwargs):
         if not current_user.is_admin:
             return dict(success=False, msg='You are not Admin User.')
-        return func(args, kwargs)
+        return func(*args, **kwargs)
 
     return __func
 
