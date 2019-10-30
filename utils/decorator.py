@@ -2,6 +2,18 @@
 import json
 import functools
 
+from flask_login import current_user
+
+
+def admin_role(func):
+    @functools.wraps(func)
+    def __func(*args, **kwargs):
+        if not current_user.is_admin:
+            return dict(success=False, msg='You are not Admin User.')
+        return func(args, kwargs)
+
+    return __func
+
 
 def json_resp(func):
     @functools.wraps(func)
