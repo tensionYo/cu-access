@@ -15,7 +15,8 @@ MYSQL_CONFIG = {
     'password': 'bni-jk',
     'host': MYSQL_HOST,
     'db': 'sjk_cu',
-    'port': MYSQL_PORT
+    'port': MYSQL_PORT,
+    'autocommit': True
 }
 
 CORS_RESOURCES = {
