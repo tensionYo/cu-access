@@ -24,4 +24,4 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect('/login/')
+    return redirect('/auth/login/')
