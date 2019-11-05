@@ -5,15 +5,18 @@ from conf.config import *
 from auth.login import login_manager
 from blueprint.product_bp import bp as product_bp
 from blueprint.login_bp import bp as login_bp
+from blueprint.task2_bp import bp as task_bp
+from blueprint.task3_bp import bp as task_bp2
 
 app = Flask(__name__)
 CORS(app, resources=CORS_RESOURCES)
 
 app.secret_key = APP_SECRETE_KEY
-
 login_manager.init_app(app)
 app.register_blueprint(login_bp)
 app.register_blueprint(product_bp)
+app.register_blueprint(task_bp)
+app.register_blueprint(task_bp2)
 
 
 if __name__ == '__main__':
