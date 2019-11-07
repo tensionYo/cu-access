@@ -40,7 +40,9 @@ class MySQLClient:
     def execute(self, sql):
         con = self.cp.get_connection()
         cur = con.cursor(cursor_class=MySQLCursorBufferedDict)
+        # cur.execute('start transaction;')
         cur.execute(sql)
+        # cur.execute('commit;')
         cur.close()
         con.close()
 
