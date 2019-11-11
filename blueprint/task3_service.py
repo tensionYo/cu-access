@@ -21,8 +21,9 @@ def DateAndNumFromTableIPTV_concurrence_user_num(time):
     result = cli.fetchall(sql)
     print(result)
     for i in result:
-        time = i['start_time'].split("  ")
+        time = i['start_time'].split(" ")
         i.update({'start_time': time[0]})
+    print(result)
     return result
 
 
@@ -31,8 +32,9 @@ def DateAndNumFromTableBRAS_online_user_num(time):
     sql = "select start_time,user_num from BRAS_online_user_num where start_time like '%s';" %temp
     result = cli.fetchall(sql)
     for i in result:
-        time = i['start_time'].split("  ")
+        time = i['start_time'].split(" ")
         i.update({'start_time': time[0]})
+    print(result)
     return result
 
 def AllFromTableBRASUserNum(time):
@@ -47,7 +49,7 @@ def AllFromTableBRASUserNum(time):
     return600 = []
     total = []
     for i in result:
-        time = i['start_time'].split("  ")
+        time = i['start_time'].split(" ")
         returnTime.append(time[0])
         return100.append(i['level_first'])
         return200.append(i['level_second'])
@@ -63,11 +65,12 @@ def AllFromTableBRASUserNum(time):
     dic['return500'] = return500
     dic['return600'] = return600
     dic['total'] = total
+    print(dic)
     return dic
 
 
 
-
+# not test
 def  packagingRegisterUserReturnType(resultIPTV,resultBRAS):
     returnTime,returnIPTV,returnBRAS = [],[],[]
     for i in range(len(resultIPTV)):
@@ -91,7 +94,7 @@ def initBRAS_online_user_num():
     for i in result1:
         total = i['level_first']+i['level_second']+i['level_third']+i['level_forth']+i['level_fifth']
         vs = tuple([total,total/5,k])
-        sql2 = "update BRAS_online_user_num SET user_num = '%s',online_service_total_field = '%s' where id = '%s' ;" %vs
+        sql2 = "update BRAS_online_user_num SET user_num = '%s',online_service_total = '%s' where id = '%s' ;" %vs
         print()
         cli.execute(sql2)
         k+=1
@@ -144,7 +147,7 @@ def calculateParametersWithIPTVAndBRAS(time):
     broadband_user_online_rate_ave = []
     broadband_user_rate_ave = []
     for i in range(count[0]['count']):
-        temp = result1[i]['start_time'].split("  ")
+        temp = result1[i]['start_time'].split(" ")
         time.append(temp[0])
         infiltration_ratio.append(result1[i]['user_num']*2.0/result2[i]['user_num']/1.4)
         demand_rate_ave.append(result1[i]['CDN_total']*1.0/result1[i]['CDN_total_num'])
@@ -154,7 +157,7 @@ def calculateParametersWithIPTVAndBRAS(time):
         live_simultaneously.append((result1[i]['level_first_LIVE']+result1[i]['multicast_simultaneously'])/2.0/result1[i]['user_num'])
         broadband_user_live_rate_ave.append(live_user_rate_ave[i]*live_simultaneously[i]*infiltration_ratio[i])
         online_user_simultaneously.append(0.7)
-        online_user_rate_ave.append(5)
+        online_user_rate_ave.append(2)
         broadband_user_online_rate_ave.append(online_user_rate_ave[i]*online_user_simultaneously[i])
         broadband_user_rate_ave.append((broadband_user_live_rate_ave[i]+live_simultaneously[i])*1.1+infiltration_ratio[i])
 

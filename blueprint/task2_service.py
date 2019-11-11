@@ -111,8 +111,10 @@ if __name__ == '__main__':
         initBRAS_online_user_num()
         initIPTV_concurrence_user_num()
         calculateParametersWithIPTVAndBRAS("2019/10")
+        ShowInfomationOfDeviceByIdAndType(7)
+        DateAndNumFromTableBRAS_online_user_num("2017/6")
     """
-    ShowInfomationOfDeviceByIdAndType(7)
+    calculateParametersWithIPTVAndBRAS("2017/6")
 
 
 
