@@ -119,7 +119,7 @@ if __name__ == '__main__':
         link_relation()
     """
     update_FTTH_table()
- 
+
 
 
 
