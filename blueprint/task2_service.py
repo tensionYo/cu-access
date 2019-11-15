@@ -1,6 +1,7 @@
 # encoding = utf-8
 from db.client import cli
 from blueprint.task3_service import *
+from blueprint.task4_service import *
 
 
 def AllFromTableBusiness_parameters():
@@ -113,9 +114,12 @@ if __name__ == '__main__':
         calculateParametersWithIPTVAndBRAS("2019/10")
         ShowInfomationOfDeviceByIdAndType(7)
         DateAndNumFromTableBRAS_online_user_num("2017/6")
+        calculateParametersWithIPTVAndBRAS("2017/6")
+        device_interface_matching()
+        link_relation()
     """
-    calculateParametersWithIPTVAndBRAS("2017/6")
-
+    update_FTTH_table()
+ 
 
 
 
