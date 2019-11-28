@@ -17,7 +17,7 @@ def AllFromTableBRAS_online_user_num():
 
 def DateAndNumFromTableIPTV_concurrence_user_num(time):
     temp = '%'+time+'%'
-    sql = "select start_time,user_num from IPTV_concurrence_user_num where start_time like '%s';" %temp
+    sql = "select start_time,user_num from iptv_concurrence_user_num where start_time like '%s';" %temp
     result = cli.fetchall(sql)
     print(result)
     for i in result:
@@ -29,7 +29,7 @@ def DateAndNumFromTableIPTV_concurrence_user_num(time):
 
 def DateAndNumFromTableBRAS_online_user_num(time):
     temp = '%' + time + '%'
-    sql = "select start_time,user_num from BRAS_online_user_num where start_time like '%s';" %temp
+    sql = "select start_time,user_num from bras_online_user_num where start_time like '%s';" %temp
     result = cli.fetchall(sql)
     for i in result:
         time = i['start_time'].split(" ")
@@ -39,7 +39,7 @@ def DateAndNumFromTableBRAS_online_user_num(time):
 
 def AllFromTableBRASUserNum(time):
     temp = '%' + time + '%'
-    sql = "select start_time,level_first,level_second,level_third,level_forth,level_fifth from BRAS_online_user_num where start_time like '%s';" % temp
+    sql = "select start_time,level_first,level_second,level_third,level_forth,level_fifth from bras_online_user_num where start_time like '%s';" % temp
     result = cli.fetchall(sql)
     returnTime = []
     return100 = []
@@ -88,13 +88,13 @@ def  packagingRegisterUserReturnType(resultIPTV,resultBRAS):
 
 
 def initBRAS_online_user_num():
-    sql1 = "select * from BRAS_online_user_num ;"
+    sql1 = "select * from bras_online_user_num ;"
     result1 = cli.fetchall(sql1)
     k = 1
     for i in result1:
         total = i['level_first']+i['level_second']+i['level_third']+i['level_forth']+i['level_fifth']
         vs = tuple([total,total/5,k])
-        sql2 = "update BRAS_online_user_num SET user_num = '%s',online_service_total = '%s' where id = '%s' ;" %vs
+        sql2 = "update bras_online_user_num SET user_num = '%s',online_service_total = '%s' where id = '%s' ;" %vs
         print()
         cli.execute(sql2)
         k+=1
@@ -103,7 +103,7 @@ def initBRAS_online_user_num():
 
 
 def initIPTV_concurrence_user_num():
-    sql1 = "select * from IPTV_concurrence_user_num ;"
+    sql1 = "select * from iptv_concurrence_user_num ;"
     result1 = cli.fetchall(sql1)
     k = 1
     for i in result1:
@@ -114,19 +114,19 @@ def initIPTV_concurrence_user_num():
         CDN_total_num = baseNum
         CDN_total = (i['level_first_LIVE']+multicast_simultaneously)*i['LIVE_aver_bandwidth']+(i['level_first_VOD']+i['level_second_VOD'])*i['VOD_aver_bandwidth']+i['level_first_TSTV']*i['TSTV_aver_bandwidth']+i['level_first_TVOD']*i['TVOD_aver_bandwidth']
         vs = tuple([user_num,unicast_simultaneously,multicast_simultaneously,CDN_total_num,CDN_total,k])
-        sql2 = "update IPTV_concurrence_user_num SET user_num = '%s',unicast_simultaneously = '%s', multicast_simultaneously = '%s', CDN_total_num = '%s', CDN_total = '%s' where id = '%s' ;" %vs
+        sql2 = "update iptv_concurrence_user_num SET user_num = '%s',unicast_simultaneously = '%s', multicast_simultaneously = '%s', CDN_total_num = '%s', CDN_total = '%s' where id = '%s' ;" %vs
         print()
         cli.execute(sql2)
         k += 1
 
 def calculateParametersWithIPTVAndBRAS(time):
     temp = '%' + time + '%'
-    sql = "select count(*) as count from IPTV_concurrence_user_num where start_time like '%s';" %temp
-    sql1 = "select * from IPTV_concurrence_user_num where start_time like '%s';" %temp
-    sql2 = "select * from BRAS_online_user_num where start_time like '%s';" %temp
-    sql3 = "select total_channel_bandwidth_request as SD_rate from Live_channel_bandwidth where type like '%s';" %'%SD%'
-    sql4 = "select sum(total_channel_bandwidth_request)  as HD_rate from Live_channel_bandwidth where type like '%s';" %'%HD%'
-    sql5 = "select sum(total_channel_bandwidth_request) as K_rate from Live_channel_bandwidth where type like '%s';" %'%K%'
+    sql = "select count(*) as count from iptv_concurrence_user_num where start_time like '%s';" %temp
+    sql1 = "select * from iptv_concurrence_user_num where start_time like '%s';" %temp
+    sql2 = "select * from bras_online_user_num where start_time like '%s';" %temp
+    sql3 = "select total_channel_bandwidth_request as SD_rate from live_channel_bandwidth where type like '%s';" %'%sd%'
+    sql4 = "select sum(total_channel_bandwidth_request)  as HD_rate from live_channel_bandwidth where type like '%s';" %'%hd%'
+    sql5 = "select sum(total_channel_bandwidth_request) as K_rate from live_channel_bandwidth where type like '%s';" %'%K%'
     count = cli.fetchall(sql)
     print(count)
     result1 = cli.fetchall(sql1)
@@ -174,12 +174,14 @@ def calculateParametersWithIPTVAndBRAS(time):
     dic['online_user_rate_ave'] = online_user_rate_ave
     dic['broadband_user_online_rate_ave'] = broadband_user_online_rate_ave
     dic['broadband_user_rate_ave'] = broadband_user_rate_ave
+    print(dic)
     return dic
 
 def AllfromTableStation():
     sql = "select * from station ;"
     result = cli.fetchall(sql)
-    return  result
+    print(result)
+    return result
 
 def AllDevicesByStationId(id):
     sql_brascrsr = " select * from cu_brascrsr_device where station = '%s' ;" %id
@@ -207,6 +209,7 @@ def AllDevicesByStationId(id):
     tempdic['brascrsr'] = brascrsr
     tempdic['olt'] = olt
     result.append(tempdic)
+    print(result)
     return result
 
 def ShowInfomationOfDeviceByIdAndType(id):

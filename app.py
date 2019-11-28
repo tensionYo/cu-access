@@ -8,6 +8,7 @@ from blueprint.login_bp import bp as login_bp
 from blueprint.task2_bp import bp as task_bp
 from blueprint.task3_bp import bp as task_bp2
 from blueprint.task4_bp import bp as task_bp4
+from blueprint.task5_bp import bp as task_bp5
 
 app = Flask(__name__)
 CORS(app, resources=CORS_RESOURCES)
@@ -19,6 +20,7 @@ app.register_blueprint(product_bp)
 app.register_blueprint(task_bp)
 app.register_blueprint(task_bp2)
 app.register_blueprint(task_bp4)
+app.register_blueprint(task_bp5)
 
 
 if __name__ == '__main__':

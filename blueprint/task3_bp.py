@@ -84,7 +84,7 @@ def ShowInfomationOfDevice():
     """
     id = request.args.get('id').encode('utf-8')
 
-    result =  ShowInfomationOfDeviceByIdAndType(id)
+    result = ShowInfomationOfDeviceByIdAndType(id)
     return dict(success=True, data=result)
 
 
