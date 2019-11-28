@@ -4,7 +4,7 @@ from flask_login import login_required
 from utils.decorator import json_resp, admin_role
 from blueprint.task5_service import *
 
-bp = Blueprint('task1_bp4', __name__, url_prefix='/api')
+bp = Blueprint('task1_bp5', __name__, url_prefix='/api')
 
 DEFAULT_EMPTY = '--EMPTY--'
 meal_threshold_KEYS = ['meal_type','down_direction__down_limit','down_direction__up_limit','up_direction_down_limit','up_direction_up_limit']

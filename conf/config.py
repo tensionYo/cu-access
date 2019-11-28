@@ -3,7 +3,7 @@ import os
 
 
 HOST = '0.0.0.0' if os.environ.get('ENV') == 'online' else 'localhost'
-PORT = os.environ.get('PORT') or 8080
+PORT = os.environ.get('PORT') or 5000
 MYSQL_HOST = os.environ.get('MYSQL_HOST', '127.0.0.1')
 MYSQL_PORT = os.environ.get('MYSQL_PORT', 3308)
 # MYSQL_HOST = os.environ.get('MYSQL_HOST', '10.108.50.73')
@@ -32,7 +32,7 @@ MYSQL_CONFIG = {
 
 CORS_RESOURCES = {
     r'/*': {
-        'origins': ['http://localhost:8080', 'http://172.20.10.11', 'http://10.128.239.215:8080','http://10.28.136.43:8080',
+        'origins': ['http://localhost:8080', 'http://172.20.10.11', 'http://10.128.239.215:8080','http://10.28.136.43:8080','http://127.0.0.1:5000',
                     'http://10.28.146.160:8080', 'http://192.168.43.207:8080', 'http://10.128.255.97:8080']
     }
 }
