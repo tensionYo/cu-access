@@ -2,6 +2,7 @@
 from db.client import cli
 from blueprint.task3_service import *
 from blueprint.task5_service import *
+from blueprint.olt_service import *
 
 
 def AllFromTableBusiness_parameters():
@@ -115,10 +116,15 @@ if __name__ == '__main__':
         
         device_interface_matching()
         link_relation()
+        update_port_threshold_table(['OLT','up_port',"GE",0.501,0.5,0.65,0.65,0,0,1])
+        pon_port_lowwer_than_threshold_impl(None,None,None,u'\u5929\u6d25')
+        olt_up_port_lowwer_than_threshold_impl()
+        pon_port_lowwer_than_threshold_impl(None, None, None, u'\u5929\u6d25')
+        user_bandwidth_model_table_update_9_11_impl(['1','1','1','1','1','1','1','1','1','1','1','1','1','1',8])
     """
-    update_port_threshold_table(['OLT','up_port',"GE",0.501,0.5,0.65,0.65,0,0,1])
 
-
+    # update_user_tabe_params()
+    cal_meal_case1_10_4_impl(0,0,0)
 
 
 

@@ -10,6 +10,7 @@ from blueprint.task2_bp import bp as task_bp2
 from blueprint.task3_bp import bp as task_bp3
 from blueprint.task4_bp import bp as task_bp4
 from blueprint.task5_bp import bp as task_bp5
+from blueprint.olt_bp import bp as olt_bp
 
 from flask import render_template
 
@@ -28,6 +29,7 @@ app.register_blueprint(task_bp2)
 app.register_blueprint(task_bp3)
 app.register_blueprint(task_bp4)
 app.register_blueprint(task_bp5)
+app.register_blueprint(olt_bp)
 
 @app.route('/')
 def index():
