@@ -1,4 +1,4 @@
-# encoding = utf-8
+# -*- coding: utf-8 -*-
 from db.client import cli
 
 def show_meal_thresholdset_table():

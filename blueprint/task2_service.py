@@ -1,8 +1,9 @@
-# encoding = utf-8
+# -*- coding: utf-8 -*-
 from db.client import cli
 from blueprint.task3_service import *
 from blueprint.task5_service import *
 from blueprint.olt_service import *
+from blueprint.clusterimpl import *
 
 
 def AllFromTableBusiness_parameters():
@@ -92,6 +93,8 @@ def UpdateFromTableLive_channel_bandwidth(params):
 
 
 
+
+
 if __name__ == '__main__':
     """InsertIntoTableBusiness_parameters(['hhh','2','2','2','2','2'])
         UpdateFromTableBusiness_parameters(['hhh','22','22','22','22','22',21])
@@ -124,7 +127,13 @@ if __name__ == '__main__':
     """
 
     # update_user_tabe_params()
-    cal_meal_case1_10_4_impl(0,0,0)
+    # cal_meal_case1_10_4_impl(0,0,0)
+    #cluster_impl('南开分公司','河东分公司',4)
+    list = "1,2,3,".split(',')
+    for i in list:
+        if i != '':
+            print(i)
+    print("end")
 
 
 

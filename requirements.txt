@@ -4,4 +4,6 @@ flask-login=0.4.1
 mysql-connector-python==8.0.16
 gunicorn
 numpy
+matplotlib
+sklearn
 

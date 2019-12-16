@@ -1,4 +1,4 @@
-# encoding = utf-8
+# -*- coding: utf-8 -*-
 from flask import Blueprint, request, redirect
 from utils.decorator import json_resp
 from auth.login import get_user
