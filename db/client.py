@@ -15,6 +15,8 @@ def get_mysql_connection_pool():
     return __pool
 
 
+
+
 class MySQLClient:
     def __init__(self):
         self.cp = get_mysql_connection_pool()
