@@ -1755,7 +1755,7 @@ def usertable_update2_9_1():
 
 
 def user_table_9_1_impl():
-    sql = "select * from 9_1_user_table  ;"
+    sql = "select * from 9_1_user_table  where id < 200;"
     return cli.fetchall(sql)
 
 def MDU_table_9_1_impl():
@@ -1918,6 +1918,7 @@ def OLT_UP_table_9_1_impl():
         sql2 = "select * from link_name where Network_element_IP = '%s' and is_trunk = 'YES' and Link_level = 'OLT-LSW' ;"%i['OLT_IP']
         res2 = cli.fetchall(sql2)
         count=0
+    
         for j in res2:
             count+=1
         for j in res2:
@@ -2017,7 +2018,9 @@ def show_datas_9_16_impl(olt_ip,olt_port,mdu_ip):
         res['down_multiple_demand'] = 5
         res['down_sum'] = res['down_unicast_live'] + res['down_unicast_demand'] + res['down_bandwidth'] + res[
             'down_multiple_user_live'] + res['down_multiple_demand']
-        return res
+        list = []
+        list.append(res)
+        return list
 
     elif olt_ip and olt_port:
         sql = "select ut.OLT_IP,ut.OLT_PORT  from 9_1_user_table ut where ut.OLT_IP = '%s' and ut.OLT_PORT = '%s' group by ut.OLT_IP,ut.OLT_PORT;"% tuple([olt_ip, olt_port])
@@ -2087,7 +2090,9 @@ def show_datas_9_16_impl(olt_ip,olt_port,mdu_ip):
                                 'down_unicast_demand'] + res2['down_unicast_demand'] + res1['down_bandwidth'] + res2[
                                 'down_bandwidth']
             print(res)
-        return res
+        list = []
+        list.append(res)
+        return list
     elif olt_ip:
         sql = "select ut.OLT_IP  from 9_1_user_table ut where  ut.OLT_IP = '%s' group by ut.OLT_IP;"%olt_ip
         res = cli.fetchall(sql)

@@ -194,17 +194,21 @@ def cluster_impl(area1,area2,group_count):
     # return render_template('show.html',
     #                        img_stream=img1_stream)
 
-
+@json_resp
 def show_user(ratio):
     if ratio == None:
         return dict(success=False, msg='None params.')
-    ratio_float = float(ratio.split('%')[0])*0.01
+    temp_ratio = ratio.split('%')[0]
+    print(type(temp_ratio))
+    print(temp_ratio)
+    ratio_float = float(temp_ratio)*0.01
+    print(ratio_float)
     if 0>ratio_float or ratio_float>1:
         return dict(success=False, msg='error params.')
     sql = "select count(*) as count from cu_ofc_user ;"
-    user_num = int(cli.fetchall(sql)['count'])
+    user_num = int(cli.fetchall(sql)[0]['count'])
     select_user_num = int(user_num * ratio_float)
-    sql1 = "select * from from cu_ofc_user order by total_traffic ;"
+    sql1 = "select * from cu_ofc_user order by total_traffic DESC limit "+str(select_user_num)
     res = cli.fetchall(sql1)
     return_data = []
     count = 0

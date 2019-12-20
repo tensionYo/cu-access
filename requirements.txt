@@ -1,6 +1,6 @@
 flask==1.0.2
 flask-cors==3.0.7
-flask-login=0.4.1
+flask-login==0.4.1
 mysql-connector-python==8.0.16
 gunicorn
 numpy
