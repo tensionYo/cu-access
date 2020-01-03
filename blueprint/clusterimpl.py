@@ -155,6 +155,7 @@ def cluster_impl(area1,area2,group_count):
         return_data['area2'] = return_list2
 
 
+
         # 更新分类标签文字
         labels = ['Group1', 'Group2', 'Group3', 'Group4', 'Group5', 'Group6'];
         for lablei in range(n_clusters):

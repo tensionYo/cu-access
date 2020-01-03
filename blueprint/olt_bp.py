@@ -6,7 +6,6 @@ from utils.decorator import json_resp, admin_role
 
 bp = Blueprint('olt-bp', __name__, url_prefix='/api')
 
-
 @bp.route('/menus/department/')
 def get_departments():
     return menu_department()
@@ -14,13 +13,11 @@ def get_departments():
 
 @bp.route('/menus/<city_name>/<department_name>/')
 def get_stations(city_name, department_name):
-    print('aaa')
     return menu_station(city_name.encode('utf-8'), department_name.encode('utf-8'))
 
 
 @bp.route('/menus/<city_name>/<department_name>/<station>/')
 def get_olts(city_name, department_name, station):
-    print('bbb')
     return menus_olt(city_name.encode('utf-8'), department_name.encode('utf-8'), station)
 
 
@@ -91,7 +88,6 @@ def pon_port_traffic_stat_api():
     department = request.args.get('department', None)
     city = request.args.get('city', None)
     olt = request.args.get('olt', None)
-    print(station,department,city,olt)
     return pon_port_traffic_stat(olt, station, department, city)
 
 
@@ -139,6 +135,21 @@ def olt_uplink_stat_api():
     return olt_uplink_stat(station, department, city)
 
 
+@bp.route('/<department>/<speed>/history/')
+def department_speed_history(department, speed):
+    """
+    :type department: str
+    :type speed: str
+    :param department:
+    :param speed:
+    :return:
+    """
+    department = department.encode('utf-8')
+    speed = speed.encode('utf-8')
+    if department == '0':
+        return get_all_pon_port_history_for_tianjin(speed)
+    return get_department_speed_history(department, speed)
+
 # @bp.route('/olt/info/')
 # def olt_info_api():
 #     olt_name = request.args.get('olt_name', None)
@@ -168,7 +179,8 @@ def pon_port_over_threshold():
 @bp.route('/olt_up_port_over_threshold/')
 @json_resp
 def olt_up_port_over_threshold():
-    return olt_up_port_over_threshold_impl()
+    olt_ip = request.args.get('olt_ip', None)
+    return olt_up_port_over_threshold_impl(olt_ip)
 
 @bp.route('/pon_port_lowwer_than_threshold/')
 @json_resp
@@ -389,6 +401,14 @@ def modified_ratio_10_4():
     params.append(request.args.get('300M').encode('utf-8'))
     params.append(request.args.get('500M').encode('utf-8'))
     return dict(success=True, data=modified_ratio_10_4_impl(params))
+
+
+@bp.route('/select_user_by_speed_10_4/')
+@json_resp
+def select_user_by_speed_10_4():
+    OLT_IP = request.args.get('OLT_IP')
+    print(OLT_IP)
+    return dict(success=True, data=select_user_by_speed_10_4_impl(OLT_IP))
 """改两个表，pre_modified_ratio_table_9_1和上面的两个接口"""
 
 @bp.route('/cal_meal_case1_10_4/')
@@ -397,6 +417,9 @@ def cal_meal_case1_10_4():
     lan_user_number = request.args.get('lan_user_number',None)
     ftth_user_number = request.args.get('ftth_user_number', None)
     total_bandwidth = request.args.get('total_bandwidth',None)
+    print(lan_user_number)
+    print(ftth_user_number)
+    print(total_bandwidth)
     res = cal_meal_case1_10_4_impl(lan_user_number,ftth_user_number,total_bandwidth)
     return dict(success=True, data=res)
 
@@ -409,4 +432,30 @@ def recommned_meal_case1_10_4():
     total_bandwidth = request.args.get('total_bandwidth',None)
     print(total_bandwidth)
     res = recommned_meal_case1_10_4_impl(user_num,total_bandwidth)
+    temp = []
+    temp.append(res)
+    return dict(success=True, data=temp)
+
+@bp.route('/device_ability_11_1/')
+@json_resp
+def device_ability_11_1():
+    res = device_ability_11_1_impl()
+    return dict(success=True, data=res)
+
+@bp.route('/plan_11_2/')
+@json_resp
+def plan_11_2():
+    res = plan_11_2_impl()
+    return dict(success=True, data=res)
+
+@bp.route('/cut_11_3/')
+@json_resp
+def cut_11_3():
+    res = cut_11_3_impl()
+    return dict(success=True, data=res)
+
+@bp.route('/plan_12_1/')
+@json_resp
+def plan_12_1():
+    res = plan_12_1_impl()
     return dict(success=True, data=res)

@@ -18,20 +18,26 @@ def Device_interface_matching_north():
 @bp.route('/Link_reletion/')
 @json_resp
 def Link_reletion():
-    result = link_relation()
+    device_ip = request.args.get('DEVICE_IP')
+    result = link_relation(device_ip)
     return dict(success=True, data=result)
 
 @bp.route('/Device_interface_matching_south/')
 @json_resp
 def Device_interface_matching_south():
-    result = device_interface_matching_south()
+    olt_ip = request.args.get('OLT_IP')
+    print(olt_ip)
+    result = device_interface_matching_south(olt_ip)
     return dict(success=True, data=result)
+
 
 
 @bp.route('/link_tree/')
 @json_resp
 def link_tree():
-    result = Link_tree()
+    Broadband_account = request.args.get('Broadband_account')
+    olt_id = request.args.get('olt_id')
+    result = Link_tree(Broadband_account,olt_id)
     return dict(success=True, data=result)
 
 @bp.route('/PON_device_power/')

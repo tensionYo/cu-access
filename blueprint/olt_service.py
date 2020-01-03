@@ -4,6 +4,7 @@ from db.client import cli
 from utils.decorator import json_resp
 from utils.tools import all_none
 import random
+from datetime import date, datetime
 
 
 @json_resp
@@ -1036,17 +1037,63 @@ def olt_uplink_stat(station, department, city):
     }
     if res:
         for i in res:
-            if 0 <= i['total_input_traffic'] < 500:
+            if 0 <= i['t'] < 500:
                 resp['0-500Mbps'] += 1
-            elif 500 <= i['total_input_traffic'] < 1000:
+            elif 500 <= i['t'] < 1000:
                 resp['500-1000Mbps'] += 1
-            elif 1000 <= i['total_input_traffic'] < 1500:
+            elif 1000 <= i['t'] < 1500:
                 resp['1000-1500Mbps'] += 1
-            elif 1500 <= i['total_input_traffic'] < 2000:
+            elif 1500 <= i['t'] < 2000:
                 resp['1500-2000Mbps'] += 1
             else:
                 resp['2000Mbps+'] += 1
     return dict(success=True, data=resp)
+
+
+@json_resp
+def get_department_speed_history(department, speed):
+    """
+    :type department: str
+    :type speed: str
+    :param department:
+    :param speed:
+    :return:
+    """
+    sql = "select * from cu_product_pon_traffic_history " \
+          "where department = '%s' and speed = '%s';" % (department, speed)
+    r = cli.fetchall(sql)
+    res = wrap_pon_port_history(r)
+    return dict(success=True, data=res)
+
+
+def wrap_pon_port_history(r):
+    res = {
+        'date': [],
+        'avg': [],
+        'peak': [],
+        'avg_mean': -1,
+        'peak_mean': -1
+    }
+    for e in r:
+        for k, v in e.items():
+            if isinstance(v, (date, datetime)):
+                e[k] = v.strftime("%Y-%m-%d")
+        res['date'].append(e['date'])
+        res['avg'].append(e['downstream_avg'])
+        res['peak'].append(e['downstream_peak'])
+    res['avg_mean'] = -1 if len(res['avg']) == 0 else sum(res['avg']) / len(res['avg'])
+    res['peak_mean'] = -1 if len(res['peak']) == 0 else sum(res['peak']) / len(res['peak'])
+    return res
+
+
+@json_resp
+def get_all_pon_port_history_for_tianjin(speed):
+    sql = "SELECT * FROM cu_tianjin_history " \
+          "WHERE speed = '%s';" % speed
+    r = cli.fetchall(sql)
+    res = wrap_pon_port_history(r)
+    return dict(success=True, data=res)
+
 
 
 @json_resp
@@ -1169,7 +1216,7 @@ def pon_port_over_threshold_impl(olt, station, department, city):
     for i in res:
         ratio = float(i['rate'].split('%')[0])*0.01
         i.pop('rate')
-        i['peak_rate'] = ratio
+        i['peak_rate'] = round(ratio,4)
         i['start_time'] = "2019/4/6 00:00"
         i['end_time'] = "2019/4/7 00:00"
         i['particle_size'] = "1 day"
@@ -1194,8 +1241,11 @@ def pon_port_over_threshold_impl(olt, station, department, city):
     return res
 
 
-def olt_up_port_over_threshold_impl():
-    sql = "select * from city_up_road_traffic ;"
+def olt_up_port_over_threshold_impl(olt_ip):
+    if olt_ip == None or olt_ip == '':
+        sql = "select * from city_up_road_traffic ;"
+    else:
+        sql = "select * from city_up_road_traffic where olt_ip = '%s';"%olt_ip
     result = cli.fetchall(sql)
     sql1 = "select * from threshold_port where device_type = 'OLT' and port_type = 'up_port';"
     threshold = cli.fetchone(sql1)
@@ -1797,51 +1847,51 @@ def PON_table_9_1_impl():
         res2 = cli.fetchall(sql2)[0]
         if res1['OLT_IP']==None :
             # only lan user
-            i['up_multiple_user_live'] = res2['up_multiple_user_live']
-            i['up_multiple_user_demand'] = res2['up_multiple_user_demand']
-            i['up_unicast_live'] = res2['up_unicast_live']
-            i['up_unicast_demand'] = res2['up_unicast_demand']
-            i['up_bandwidth'] = res2['up_bandwidth']
-            i['up_sum'] = res2['up_sum']
+            i['up_multiple_user_live'] = round(float(res2['up_multiple_user_live']),4)
+            i['up_multiple_user_demand'] = round(float(res2['up_multiple_user_demand']),4)
+            i['up_unicast_live'] = round(float(res2['up_unicast_live']),4)
+            i['up_unicast_demand'] = round(float(res2['up_unicast_demand']),4)
+            i['up_bandwidth'] = round(float(res2['up_bandwidth']),4)
+            i['up_sum'] = (float(res2['up_sum']),4)
 
             i['down_multiple_user_live'] = 55
-            i['down_multiple_demand'] = res2['down_multiple_demand']
-            i['down_unicast_live'] = res2['down_unicast_live']
-            i['down_unicast_demand'] = res2['down_unicast_demand']
-            i['down_bandwidth'] = res2['down_bandwidth']
-            i['down_sum'] = i['down_multiple_user_live']+i['down_multiple_demand']+i['down_unicast_live']+i['down_unicast_demand']+i['down_bandwidth']
+            i['down_multiple_demand'] = round(float(res2['down_multiple_demand']),4)
+            i['down_unicast_live'] = round(float(res2['down_unicast_live']),4)
+            i['down_unicast_demand'] = round(float(res2['down_unicast_demand']),4)
+            i['down_bandwidth'] = round(float(res2['down_bandwidth']),4)
+            i['down_sum'] = round(i['down_multiple_user_live']+i['down_multiple_demand']+i['down_unicast_live']+i['down_unicast_demand']+i['down_bandwidth'])
             print(i)
         elif res2['OLT_IP'] == None:
             # only ftth user
-            i['up_multiple_user_live'] = res1['up_multiple_user_live']
-            i['up_multiple_user_demand'] = res1['up_multiple_user_demand']
-            i['up_unicast_live'] = res1['up_unicast_live']
-            i['up_unicast_demand'] = res1['up_unicast_demand']
-            i['up_bandwidth'] = res1['up_bandwidth']
-            i['up_sum'] = res1['up_sum']
+            i['up_multiple_user_live'] = round(float(res1['up_multiple_user_live']),4)
+            i['up_multiple_user_demand'] = round(float(res1['up_multiple_user_demand']),4)
+            i['up_unicast_live'] = round(float(res1['up_unicast_live']),4)
+            i['up_unicast_demand'] = round(float(res1['up_unicast_demand']),4)
+            i['up_bandwidth'] = round(float(res1['up_bandwidth']),4)
+            i['up_sum'] = round(float(res1['up_sum']),4)
 
-            i['down_multiple_user_live'] = res1['down_multiple_user_live']
-            i['down_multiple_demand'] = res1['down_multiple_demand']
-            i['down_unicast_live'] = res1['down_unicast_live']
-            i['down_unicast_demand'] = res1['down_unicast_demand']
-            i['down_bandwidth'] = res1['down_bandwidth']
-            i['down_sum'] = i['down_multiple_user_live']+ i['down_multiple_demand'] + i['down_unicast_live'] + i['down_unicast_demand'] + i['down_bandwidth']
+            i['down_multiple_user_live'] = round(float(res1['down_multiple_user_live']),4)
+            i['down_multiple_demand'] = round(float(res1['down_multiple_demand']),4)
+            i['down_unicast_live'] = round(float(res1['down_unicast_live']),4)
+            i['down_unicast_demand'] = round(float(res1['down_unicast_demand']),4)
+            i['down_bandwidth'] = round(float(res1['down_bandwidth']),4)
+            i['down_sum'] = round(i['down_multiple_user_live']+ i['down_multiple_demand'] + i['down_unicast_live'] + i['down_unicast_demand'] + i['down_bandwidth'])
             print(i)
         else:
             # both lan user and ftth user
-            i['up_multiple_user_live'] = res1['up_multiple_user_live'] + res2['up_multiple_user_live']
-            i['up_multiple_user_demand'] = res1['up_multiple_user_demand'] + res2['up_multiple_user_demand']
-            i['up_unicast_live'] = res1['up_unicast_live'] + res2['up_unicast_live']
-            i['up_unicast_demand'] = res1['up_unicast_demand'] + res2['up_unicast_demand']
-            i['up_bandwidth'] = res1['up_bandwidth'] + res2['up_bandwidth']
-            i['up_sum'] = res1['up_sum'] + res2['up_sum']
+            i['up_multiple_user_live'] = round(res1['up_multiple_user_live'] + res2['up_multiple_user_live'],4)
+            i['up_multiple_user_demand'] = round(res1['up_multiple_user_demand'] + res2['up_multiple_user_demand'],4)
+            i['up_unicast_live'] = round(res1['up_unicast_live'] + res2['up_unicast_live'],4)
+            i['up_unicast_demand'] = round(res1['up_unicast_demand'] + res2['up_unicast_demand'],4)
+            i['up_bandwidth'] = round(res1['up_bandwidth'] + res2['up_bandwidth'],4)
+            i['up_sum'] = round(res1['up_sum'] + res2['up_sum'],4)
 
-            i['down_multiple_user_live'] = res1['down_multiple_user_live'] + 55
-            i['down_multiple_demand'] = res1['down_multiple_demand'] + res2['down_multiple_demand']
-            i['down_unicast_live'] = res1['down_unicast_live'] + res2['down_unicast_live']
-            i['down_unicast_demand'] = res1['down_unicast_demand'] + res2['down_unicast_demand']
-            i['down_bandwidth'] = res1['down_bandwidth'] + res2['down_bandwidth']
-            i['down_sum'] = res1['down_multiple_user_live'] + 55 + res1['down_multiple_demand'] + res2['down_multiple_demand'] + res1['down_unicast_live'] + res2['down_unicast_live'] + res1['down_unicast_demand'] + res2['down_unicast_demand'] + res1['down_bandwidth'] + res2['down_bandwidth']
+            i['down_multiple_user_live'] = round(res1['down_multiple_user_live'] + 55,4)
+            i['down_multiple_demand'] = round(res1['down_multiple_demand'] + res2['down_multiple_demand'],4)
+            i['down_unicast_live'] = round(res1['down_unicast_live'] + res2['down_unicast_live'],4)
+            i['down_unicast_demand'] = round(res1['down_unicast_demand'] + res2['down_unicast_demand'],4)
+            i['down_bandwidth'] = round(res1['down_bandwidth'] + res2['down_bandwidth'],4)
+            i['down_sum'] = round(res1['down_multiple_user_live'] + 55 + res1['down_multiple_demand'] + res2['down_multiple_demand'] + res1['down_unicast_live'] + res2['down_unicast_live'] + res1['down_unicast_demand'] + res2['down_unicast_demand'] + res1['down_bandwidth'] + res2['down_bandwidth'],4)
             print(i)
     return res
 
@@ -1862,80 +1912,80 @@ def OLT_UP_table_9_1_impl():
         res2 = cli.fetchall(sql2)[0]
         if res1['OLT_IP'] == None:
             # only lan user
-            i['up_multiple_user_live'] = res2['up_multiple_user_live']
-            i['up_multiple_user_demand'] = res2['up_multiple_user_demand']
-            i['up_unicast_live'] = res2['up_unicast_live']
-            i['up_unicast_demand'] = res2['up_unicast_demand']
-            i['up_bandwidth'] = res2['up_bandwidth']
-            i['up_sum'] = res2['up_sum']
+            i['up_multiple_user_live'] = round(res2['up_multiple_user_live'],4)
+            i['up_multiple_user_demand'] = round(res2['up_multiple_user_demand'],4)
+            i['up_unicast_live'] = round(res2['up_unicast_live'],4)
+            i['up_unicast_demand'] = round(res2['up_unicast_demand'],4)
+            i['up_bandwidth'] = round(res2['up_bandwidth'],4)
+            i['up_sum'] = round(res2['up_sum'],4)
 
             i['down_multiple_user_live'] = 1500
-            i['down_multiple_demand'] = res2['down_multiple_demand']
-            i['down_unicast_live'] = res2['down_unicast_live']
-            i['down_unicast_demand'] = res2['down_unicast_demand']
-            i['down_bandwidth'] = res2['down_bandwidth']
-            i['down_sum'] = i['down_multiple_user_live'] + i['down_multiple_demand'] + i['down_unicast_live'] + i[
-                'down_unicast_demand'] + i['down_bandwidth']
+            i['down_multiple_demand'] = round(res2['down_multiple_demand'],4)
+            i['down_unicast_live'] = round(res2['down_unicast_live'],4)
+            i['down_unicast_demand'] = round(res2['down_unicast_demand'],4)
+            i['down_bandwidth'] = round(res2['down_bandwidth'],4)
+            i['down_sum'] = round(i['down_multiple_user_live'] + i['down_multiple_demand'] + i['down_unicast_live'] + i[
+                'down_unicast_demand'] + i['down_bandwidth'],4)
             print(i)
         elif res2['OLT_IP'] == None:
             # only ftth user
-            i['up_multiple_user_live'] = res1['up_multiple_user_live']
-            i['up_multiple_user_demand'] = res1['up_multiple_user_demand']
-            i['up_unicast_live'] = res1['up_unicast_live']
-            i['up_unicast_demand'] = res1['up_unicast_demand']
-            i['up_bandwidth'] = res1['up_bandwidth']
-            i['up_sum'] = res1['up_sum']
+            i['up_multiple_user_live'] = round(res1['up_multiple_user_live'],4)
+            i['up_multiple_user_demand'] = round(res1['up_multiple_user_demand'],4)
+            i['up_unicast_live'] = round(res1['up_unicast_live'],4)
+            i['up_unicast_demand'] = round(res1['up_unicast_demand'],4)
+            i['up_bandwidth'] = round(res1['up_bandwidth'],4)
+            i['up_sum'] = round(res1['up_sum'],4)
 
-            i['down_multiple_user_live'] = res1['down_multiple_user_live']
-            i['down_multiple_demand'] = res1['down_multiple_demand']
-            i['down_unicast_live'] = res1['down_unicast_live']
-            i['down_unicast_demand'] = res1['down_unicast_demand']
-            i['down_bandwidth'] = res1['down_bandwidth']
-            i['down_sum'] = i['down_multiple_user_live'] + i['down_multiple_demand'] + i['down_unicast_live'] + i[
-                'down_unicast_demand'] + i['down_bandwidth']
+            i['down_multiple_user_live'] = round(res1['down_multiple_user_live'],4)
+            i['down_multiple_demand'] = round(res1['down_multiple_demand'],4)
+            i['down_unicast_live'] = round(res1['down_unicast_live'],4)
+            i['down_unicast_demand'] = round(res1['down_unicast_demand'],4)
+            i['down_bandwidth'] = round(res1['down_bandwidth'],4)
+            i['down_sum'] = round(i['down_multiple_user_live'] + i['down_multiple_demand'] + i['down_unicast_live'] + i[
+                'down_unicast_demand'] + i['down_bandwidth'],4)
             print(i)
         else:
             # both lan user and ftth user
-            i['up_multiple_user_live'] = res1['up_multiple_user_live'] + res2['up_multiple_user_live']
-            i['up_multiple_user_demand'] = res1['up_multiple_user_demand'] + res2['up_multiple_user_demand']
-            i['up_unicast_live'] = res1['up_unicast_live'] + res2['up_unicast_live']
-            i['up_unicast_demand'] = res1['up_unicast_demand'] + res2['up_unicast_demand']
-            i['up_bandwidth'] = res1['up_bandwidth'] + res2['up_bandwidth']
-            i['up_sum'] = res1['up_sum'] + res2['up_sum']
+            i['up_multiple_user_live'] = round(res1['up_multiple_user_live'] + res2['up_multiple_user_live'],4)
+            i['up_multiple_user_demand'] = round(res1['up_multiple_user_demand'] + res2['up_multiple_user_demand'],4)
+            i['up_unicast_live'] = round(res1['up_unicast_live'] + res2['up_unicast_live'],4)
+            i['up_unicast_demand'] = round(res1['up_unicast_demand'] + res2['up_unicast_demand'],4)
+            i['up_bandwidth'] = round(res1['up_bandwidth'] + res2['up_bandwidth'],4)
+            i['up_sum'] = round(res1['up_sum'] + res2['up_sum'],4)
 
-            i['down_multiple_user_live'] = res1['down_multiple_user_live'] + 1500
-            i['down_multiple_demand'] = res1['down_multiple_demand'] + res2['down_multiple_demand']
-            i['down_unicast_live'] = res1['down_unicast_live'] + res2['down_unicast_live']
-            i['down_unicast_demand'] = res1['down_unicast_demand'] + res2['down_unicast_demand']
-            i['down_bandwidth'] = res1['down_bandwidth'] + res2['down_bandwidth']
-            i['down_sum'] = res1['down_multiple_user_live'] + 55 + res1['down_multiple_demand'] + res2[
+            i['down_multiple_user_live'] = round(res1['down_multiple_user_live'] + 1500,4)
+            i['down_multiple_demand'] = round(res1['down_multiple_demand'] + res2['down_multiple_demand'],4)
+            i['down_unicast_live'] = round(res1['down_unicast_live'] + res2['down_unicast_live'],4)
+            i['down_unicast_demand'] = round(res1['down_unicast_demand'] + res2['down_unicast_demand'],4)
+            i['down_bandwidth'] = round(res1['down_bandwidth'] + res2['down_bandwidth'],4)
+            i['down_sum'] = round(res1['down_multiple_user_live'] + 55 + res1['down_multiple_demand'] + res2[
                 'down_multiple_demand'] + res1['down_unicast_live'] + res2['down_unicast_live'] + res1[
                                 'down_unicast_demand'] + res2['down_unicast_demand'] + res1['down_bandwidth'] + res2[
-                                'down_bandwidth']
+                                'down_bandwidth'],4)
             # print(i)
     result = []
     for i in res:
         sql2 = "select * from link_name where Network_element_IP = '%s' and is_trunk = 'YES' and Link_level = 'OLT-LSW' ;"%i['OLT_IP']
         res2 = cli.fetchall(sql2)
         count=0
-    
+
         for j in res2:
             count+=1
         for j in res2:
             tempdic = {}
             tempdic['link_relation'] = j['Network_element_IP']+'-'+j['Network_element_IP1']
-            tempdic['up_multiple_user_live'] = i['up_multiple_user_live']/count
-            tempdic['up_multiple_user_demand'] = i['up_multiple_user_demand'] / count
-            tempdic['up_unicast_live'] = i['up_unicast_live'] / count
-            tempdic['up_unicast_demand'] = i['up_unicast_demand'] / count
-            tempdic['up_bandwidth'] = i['up_bandwidth'] / count
-            tempdic['up_sum'] = tempdic['up_multiple_user_live']+tempdic['up_multiple_user_demand']+tempdic['up_unicast_live']+tempdic['up_unicast_demand']+tempdic['up_bandwidth']
-            tempdic['down_multiple_user_live'] = i['down_multiple_user_live']/count
-            tempdic['down_multiple_demand'] = i['down_multiple_demand'] / count
-            tempdic['down_unicast_live'] = i['down_unicast_live'] / count
-            tempdic['down_unicast_demand'] = i['down_unicast_demand'] / count
-            tempdic['down_bandwidth'] = i['down_bandwidth'] / count
-            tempdic['down_sum'] = tempdic['down_multiple_user_live']+tempdic['down_multiple_demand'] + tempdic['down_unicast_live'] + tempdic['down_unicast_demand']+ tempdic['down_bandwidth']
+            tempdic['up_multiple_user_live'] = round(i['up_multiple_user_live']/count,4)
+            tempdic['up_multiple_user_demand'] = round(i['up_multiple_user_demand'] / count,4)
+            tempdic['up_unicast_live'] = round(i['up_unicast_live'] / count,4)
+            tempdic['up_unicast_demand'] = round(i['up_unicast_demand'] / count,4)
+            tempdic['up_bandwidth'] = round(i['up_bandwidth'] / count,4)
+            tempdic['up_sum'] = round(tempdic['up_multiple_user_live']+tempdic['up_multiple_user_demand']+tempdic['up_unicast_live']+tempdic['up_unicast_demand']+tempdic['up_bandwidth'],4)
+            tempdic['down_multiple_user_live'] = round(i['down_multiple_user_live']/count,4)
+            tempdic['down_multiple_demand'] = round(i['down_multiple_demand'] / count,4)
+            tempdic['down_unicast_live'] = round(i['down_unicast_live'] / count,4)
+            tempdic['down_unicast_demand'] = round(i['down_unicast_demand'] / count,4)
+            tempdic['down_bandwidth'] = round(i['down_bandwidth'] / count,4)
+            tempdic['down_sum'] = round(tempdic['down_multiple_user_live']+tempdic['down_multiple_demand'] + tempdic['down_unicast_live'] + tempdic['down_unicast_demand']+ tempdic['down_bandwidth'],4)
             result.append(tempdic)
             print(tempdic)
     return result
@@ -2174,7 +2224,7 @@ def show_datas_9_16_impl(olt_ip,olt_port,mdu_ip):
 
 def OLT_allow_usernum_10_3_impl():
     sql = "select cu.olt_id,ot.service_slot_count from cu_trunk cu LEFT JOIN cu_olt_device ot on cu.olt_id = ot.OLT_IP " \
-          "WHERE cu.equip_type1 = 'olt' and cu.if_olt_up_or_down = 'n' GROUP BY cu.olt_id ,ot.service_slot_count ;"
+          "WHERE cu.equip_type1 = 'olt' and cu.if_olt_up_or_down = 'n' and cu.olt_id <>'10.45.36.19' GROUP BY cu.olt_id ,ot.service_slot_count ;"
     res = cli.fetchall(sql)
     for i in res:
         sql1 = "select count(*) as count from cu_trunk where equip_type1 = 'olt' and if_olt_up_or_down = 'n' and olt_id = '%s' ;"%i['olt_id']
@@ -2265,6 +2315,15 @@ def cal_meal_case1_10_4_impl(lan_user_number,ftth_user_number,total_bandwidth):
         return "real bandwidth match requset bandwidth."
     else:
         return "real bandwidth doesn't match requset bandwidth."
+
+def select_user_by_speed_10_4_impl(OLT_IP):
+    if OLT_IP==None or OLT_IP == '':
+        sql = "select SPEED , count(*) as count from ftth_user_table  where SPEED!='' GROUP BY SPEED ORDER BY SPEED"
+    else:
+        sql = "select SPEED , count(*) as count from ftth_user_table  where SPEED!='' and OLT_IP='%s' GROUP BY SPEED ORDER BY SPEED" % OLT_IP
+    res = cli.fetchall(sql)
+    print(res)
+    return res
 
 def recommned_meal_case1_10_4_impl(user_num,total_bandwidth):
     if user_num == None or user_num == '':
@@ -2379,4 +2438,35 @@ def cal1(needed_bandwidth,bandwidth_except_multiple_user_live,user_num):
             return tempdic
 
 
+def device_ability_11_1_impl():
+    res = {}
+    sql = "select * from 11_1_PON ;"
+    res['PON'] = cli.fetchall(sql)
+    sql2 = "select * from 11_1_OLT_up ;"
+    res['OLT_UP'] = cli.fetchall(sql2)
+    return res
 
+
+def plan_11_2_impl():
+    res = {}
+    sql = "select * from 11_2_device ;"
+    res['station'] = cli.fetchall(sql)
+    sql2 = "select * from 11_2_OLT ;"
+    res['OLT'] = cli.fetchall(sql2)
+    sql3 = "select * from 11_2_PON_board ;"
+    res['board'] = cli.fetchall(sql3)
+    sql4 = "select * from 11_2_olt_up ;"
+    res['olt_up'] = cli.fetchall(sql4)
+    return res
+
+def cut_11_3_impl():
+    sql = "select * from 11_3_cut ;"
+    return cli.fetchall(sql)
+
+def plan_12_1_impl():
+    res = {}
+    sql = "select * from 12_1_device ;"
+    res['station'] = cli.fetchall(sql)
+    sql2 = "select * from 12_1_OLT ;"
+    res['OLT'] = cli.fetchall(sql2)
+    return res

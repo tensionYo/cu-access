@@ -13,23 +13,44 @@ def device_interface_matching():
     for i in equip_type_not_match:
         print(i)
     return data
+
+
+
 """not change."""
-def link_relation():
-    sql = "select Link_name,is_trunk,Link_level,Link_physical_or_trunk_bandwidth,Network_element_name,Network_element_IP,port_number," \
-          "region,Subnet,Network_element_type,Network_element_role,Port_name,Port_type,Port_physical_bandwidth,Network_element_name1,Network_element_IP1," \
-          "port_number1,region1,Subnet1,Network_element_type1,Network_element_role1,Port_name1,Port_type1,Port_physical_bandwidth1 from link_name;"
-    result = cli.fetchall(sql)
-    for i in result:
-        print(i)
-    return result
+def link_relation(device_ip):
+    if device_ip == None or device_ip == '':
+        sql = "select Link_name,is_trunk,Link_level,Link_physical_or_trunk_bandwidth,Network_element_name,Network_element_IP,port_number," \
+            "region,Subnet,Network_element_type,Network_element_role,Port_name,Port_type,Port_physical_bandwidth,Network_element_name1,Network_element_IP1," \
+            "port_number1,region1,Subnet1,Network_element_type1,Network_element_role1,Port_name1,Port_type1,Port_physical_bandwidth1 from link_name;"
+        result = cli.fetchall(sql)
+        for i in result:
+            print(i)
+        return result
+    else:
+        sql = "select Link_name,is_trunk,Link_level,Link_physical_or_trunk_bandwidth,Network_element_name,Network_element_IP,port_number," \
+              "region,Subnet,Network_element_type,Network_element_role,Port_name,Port_type,Port_physical_bandwidth,Network_element_name1,Network_element_IP1," \
+              "port_number1,region1,Subnet1,Network_element_type1,Network_element_role1,Port_name1,Port_type1,Port_physical_bandwidth1 from link_name " \
+              "where Network_element_IP = '%s' or Network_element_IP1 = '%s';"%tuple([device_ip,device_ip])
+        result = cli.fetchall(sql)
+        for i in result:
+            print(i)
+        return result
 """change. """
-def device_interface_matching_south():
-    sql = "select cu.olt_id as 'olt_id',cu.port1 as 'olt_port', cu.equip_id_link as 'OS_id', od.onu_ip as 'onu_ip', od.ONUID as 'onu_id',od.type as 'onu_type', od.onu_manufacture as 'onu_manufacture', od.serial_number as 'onu_serial_number'" \
-          " from cu_trunk cu LEFT JOIN cu_onu_device od " \
-          " on od.OLT_IP = cu.olt_id and od.OLT_PORT = cu.port1 ;"
-    result = cli.fetchall(sql)
-    print(result)
-    return result
+def device_interface_matching_south(olt_ip):
+    if olt_ip == None or olt_ip == '':
+        sql = "select cu.olt_id as 'olt_id',cu.port1 as 'olt_port', cu.equip_id_link as 'OS_id', od.onu_ip as 'onu_ip', od.ONUID as 'onu_id',od.type as 'onu_type', od.onu_manufacture as 'onu_manufacture', od.serial_number as 'onu_serial_number'" \
+              " from cu_trunk cu LEFT JOIN cu_onu_device od " \
+              " on od.OLT_IP = cu.olt_id and od.OLT_PORT = cu.port1 where cu.id<30;"
+        result = cli.fetchall(sql)
+        print(result)
+        return result
+    else:
+        sql = "select cu.olt_id as 'olt_id',cu.port1 as 'olt_port', cu.equip_id_link as 'OS_id', od.onu_ip as 'onu_ip', od.ONUID as 'onu_id',od.type as 'onu_type', od.onu_manufacture as 'onu_manufacture', od.serial_number as 'onu_serial_number'" \
+              " from cu_trunk cu LEFT JOIN cu_onu_device od " \
+              " on od.OLT_IP = cu.olt_id and od.OLT_PORT = cu.port1 where olt_id = '%s';"%olt_ip
+        result = cli.fetchall(sql)
+        print(result)
+        return result
 
 # def update_FTTH_table():
 #     sql = "select * from ftth_user_table ;"
@@ -64,12 +85,26 @@ def device_interface_matching_south():
 #             print("bandwidth.")
 
 
-def Link_tree():
-    sql1 = " select la.Broadband_account as Broadband_account,la.bandwidth as bandwidth,la.IPTV_account as IPTV_account," \
-           "la.MDUIP as MDUIP, la.MDU_port as MDU_port, cu.equip_id_link as OS_id, cu.olt_id as olt_id, cu.port1 as olt_down_port " \
-           "from lan_user_table la LEFT JOIN cu_trunk cu on la.OLT_IP = cu.olt_id and la.PON = cu.port1 " \
-           "where la.id<20 ;"
-    result = cli.fetchall(sql1)
+def Link_tree(Broadband_account,olt_id):
+    result = []
+    if Broadband_account == '' and olt_id == '':
+        sql1 = " select la.Broadband_account as Broadband_account,la.bandwidth as bandwidth,la.IPTV_account as IPTV_account," \
+            "la.MDUIP as MDUIP, la.MDU_port as MDU_port, cu.equip_id_link as OS_id, cu.olt_id as olt_id, cu.port1 as olt_down_port " \
+            "from lan_user_table la LEFT JOIN cu_trunk cu on la.OLT_IP = cu.olt_id and la.PON = cu.port1 " \
+            "where la.id<20 ;"
+        result = cli.fetchall(sql1)
+    elif Broadband_account!='':
+        sql1 = " select la.Broadband_account as Broadband_account,la.bandwidth as bandwidth,la.IPTV_account as IPTV_account," \
+               "la.MDUIP as MDUIP, la.MDU_port as MDU_port, cu.equip_id_link as OS_id, cu.olt_id as olt_id, cu.port1 as olt_down_port " \
+               "from lan_user_table la LEFT JOIN cu_trunk cu on la.OLT_IP = cu.olt_id and la.PON = cu.port1 " \
+               "where la.Broadband_account ='%s';"%Broadband_account
+        result = cli.fetchall(sql1)
+    else:
+        sql1 = " select la.Broadband_account as Broadband_account,la.bandwidth as bandwidth,la.IPTV_account as IPTV_account," \
+               "la.MDUIP as MDUIP, la.MDU_port as MDU_port, cu.equip_id_link as OS_id, cu.olt_id as olt_id, cu.port1 as olt_down_port " \
+               "from lan_user_table la LEFT JOIN cu_trunk cu on la.OLT_IP = cu.olt_id and la.PON = cu.port1 " \
+               "where la.OLT_IP ='%s'and la.id<20;" % olt_id
+        result = cli.fetchall(sql1)
 
     """olt_down_port to up_port."""
     sql2 = "select * from cu_trunk where if_olt_up_or_down = 'y' ;"
@@ -169,9 +204,9 @@ def PON_device_power():
         table_data[count - 1]['id'] = i['id']
         table_data[count - 1]['OLT_IP'] = i['OLT_IP']
         # return_result[count - 1]['up_limmit'] = i['OLT_IP']
-        table_data[count - 1]['slot_occupy_rate'] = 1.0*int(i['used_service_slot_count']) / int(i['service_slot_count'])
-        table_data[count - 1]['up_port_occupy_rate'] = 1.0*int(i['upport_upstream_flow_sum']) / int(i['PON_port_upstream_band_nominal_capacity'])
-        table_data[count - 1]['PON_port_occupy_rate'] = 1.0*int(i['pon_port_used_count']) / int(i['pon_port_config_count'])
+        table_data[count - 1]['slot_occupy_rate'] = round(1.0*int(i['used_service_slot_count']) / int(i['service_slot_count']),4)
+        table_data[count - 1]['up_port_occupy_rate'] = round(1.0*int(i['upport_upstream_flow_sum']) / int(i['PON_port_upstream_band_nominal_capacity']),4)
+        table_data[count - 1]['PON_port_occupy_rate'] = round(1.0*int(i['pon_port_used_count']) / int(i['pon_port_config_count']),4)
         sql = "select count(*) as count from lan_user_table where OLT_IP = '%s' ;" % i['OLT_IP']
         table_data[count - 1]['user_number'] = cli.fetchall(sql)[0]['count']
 
@@ -239,7 +274,6 @@ def PON_device_power():
     data = {}
     data['table_data'] = table_data
     data['view_data'] = view_data
-
     return data
 
 
