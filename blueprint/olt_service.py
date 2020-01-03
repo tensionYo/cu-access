@@ -2404,6 +2404,7 @@ def recommned_meal_case1_10_4_impl(user_num,total_bandwidth):
         tempdic['500M'] = user_num
         return tempdic
 
+
 def cal1(needed_bandwidth,bandwidth_except_multiple_user_live,user_num):
 
     user_num_list = [user_num,0,0]
